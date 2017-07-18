@@ -448,12 +448,42 @@ Spel表达式的格式  #{表达式}
 3. 开启注解扫描
 4. 在需要被IOC的类上配置@Component
 
+>注意事项：
+>在编写xml文件的时候，第一行一定不能写除了<?xml version="1.0" encoding="UTF-8"?>以外的任何东西
+>包括注释、空格、回车、换行符等等
+
 ####属性依赖注入
 简单的属性注入
 
 复杂的属性注入
 
+代码示例：
+	
+	@Component("p1")
+	public class Person {
+		@Value("Forest")//简单属性注入
+		private String name;
+		@Autowired//复杂属性注入
+		private Car car;
+		@Override
+		public String toString() {
+			return "Person [name=" + name + ", car=" + car + "]";
+		}
+	}
+
 ####属性依赖注入指定名称
+@Autowired和@Resource区别：
+
++ 如果按照类型注入：
+
+	@Autowired和@Resource效果一样;
+
++ 如果按照名称注入：
+
+	@Resource(name="car1")
+
+	@Autowired +
+	@Qualifier("car1")
 
 
 ####其他注解
@@ -461,11 +491,62 @@ Spel表达式的格式  #{表达式}
 
 @PreConstruct
 
+	@PreConstruct
+	public void mInit() {
+		System.out.println("mInit()");
+	}
+
+相当于init-method="myInit"
+
 @PreDestroy
 
+	@PreDestroy
+	public void engine() {		
+		System.out.println("开车了  "+ name);
+	}
+
+相当于是destroy-method="myDestroy"
+
+>注意：对于销毁的方法它只对bean的scope=singleton有效。如果是多例的，容器是无法管理的，所以无法销毁。
+
 ###Spring整合JUnit4
-1. 导入test jar包
-2. 测试类上
+1. 导入spring-test.jar包
+2. 测试类上添加两个注解
+	@RunWith(SpringJUnit4ClassRunner.class)//spring将junit整合到一起
+	@ContextConfiguration(locations={"classpath:beans.xml"})//指定spring配置文件的位置
 3. 直接注入对象
 
+		@Autowired
+		private Person person;
+				
+		@Test
+		public void test2() {
+			System.out.println(person);
+		} 
+
 ##Spring在web中的应用
+1. 在web项目中要使用spring需要导入一个jar包
+2. 在web.xml文件中配置Listener
+
+		 <listener>
+		  <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+		 </listener>
+
+	这个ContextLoaderListener它实现了ServletContextListener
+	在这个listener中，当服务器启动时，将ApplicationContext对象，其实是它的一个实现类
+	WebApplicationContext,对象存入到了ServletContext中。
+
+
+3. 我们还需要在web.xml文件中配置applicationContext.xml文件的位置
+
+		<context-param>
+		  <param-name>contextConfigLocation</param-name>
+		  <param-value>classpath:appllicationContext.xml</param-value>
+		</context-param>
+
+	默认情况下会在WEB-INF目录 下查找applicationContext.xmls
+	如果applicationContext.xml文件不是在默认位置，我们可以在web.xml文件中配置
+
+	Classpath:applicationContext.xml 它代表的是在当前工程的类路径下(可以理解成是在src)下来查找applicationContext.xml文件。
+	contextConfigLocation它是在listener中声明的一个常量，描述的就是spring配置文件的位置。
+
