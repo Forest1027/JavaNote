@@ -1,12 +1,12 @@
 #Spring
 
 ##Spring介绍
-<br>
-轻量级的开源框架<br>
+轻量级的开源框架
+
 可应用于javaee，.net，android
-<br>
+
 ###Spring体系结构
-1. core container<br>
+1. core container
 	beans,core,context,spEL
 
 2. Data access/integration
@@ -262,6 +262,66 @@ scope="singleton"配置，配置文件加载的时候就
 其他：
 代理对象和真实对象要实现同一个接口的原因（不然强转时不认得）。
 
+代码示例1（自定义一个类实现BeanPostProcessor接口，重写before和after两个方法）：
+
+	import java.lang.reflect.InvocationHandler;
+	import java.lang.reflect.Method;
+	import java.lang.reflect.Proxy;
+	
+	import org.springframework.beans.BeansException;
+	import org.springframework.beans.factory.config.BeanPostProcessor;
+	
+	public class MyProcessor implements BeanPostProcessor{
+
+		@Override
+		public Object postProcessAfterInitialization(final Object arg0, String arg1) throws BeansException {
+			Object proxy = Proxy.newProxyInstance(arg0.getClass().getClassLoader(), arg0.getClass().getInterfaces(),new InvocationHandler() {
+				
+				@Override
+				public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+					//在类中实现动态代理加强drive方法
+					//如果调用的是drive方法，那么就输出语句
+					if ("drive".equals(method.getName())) {
+						System.out.println("系好安全带");
+						Object result = method.invoke(arg0, args);
+						return result;
+					}
+					return null;
+				}
+			});
+			return proxy;
+		}
+
+		@Override
+		public Object postProcessBeforeInitialization(Object arg0, String arg1) throws BeansException {
+			System.out.println("before");
+			//一定注意这里要return回参数，不能return null。如果返回空值，那么对象无法创建成功
+			return arg0;
+		}
+
+	}
+
+代码示例4（applicationContext.xml的配置）:
+
+	//Car类中定义初始化和销毁的方法，并且一定要在属性上声明出来
+	<bean id="car1" class="com.forest1.beans.Car" init-method="myInit" destroy-method="myDestroy"></bean>
+	//自定义的实现BeanPostProcessor的类也需要在配置文件中声明出来
+	<bean class="com.forest1.factory.MyProcessor"></bean>
+
+代码示例3（测试动态代理）：
+
+	@Test
+	public void test3() {
+		//动态代理
+		ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		//该步涉及强转，此时getBean获得的已经是代理对象了。
+		//如果代理对象没有和被代理对象实现同一个接口，那么此处强转会出现类转换异常
+		//因此，被代理对象必须实现一个接口。这样，动态生成的代理也会继承这个接口
+		Machine car = (Machine)context.getBean("car1");
+		car.drive();
+	}
+
+
 AOP思想：不修改原来代码的基础上，对其进行增强。
 
 ###Bean的属性注入
@@ -271,19 +331,71 @@ Spring中bean的属性注入有两种：
 + setter方法注入
 
 ####构造器注入
+代码示例：
 
+	<bean id="car1" class="com.forest1.beans.Car">
+		<constructor-arg index="0" value="劳斯莱斯"></constructor-arg>
+		<constructor-arg index="1" value="100000000"></constructor-arg>
+	</bean>
 
 ####setter方法注入
+代码示例：
 
+	<!-- setter注入 -->
+	<bean id="person" class="com.forest1.beans.Person">
+		<property name="name" value="Forest"/>
+		<!-- 注意这里的ref属性，用于引用另外一个对象 -->
+		<property name="car" ref="car1"/>
+	</bean>
 
 ####集合属性的注入
+*以下代码示例均只取了property标签处，实际运用时，记得外面还有一层是bean标签，制定id和类路径*
+
 List属性注入
+
+代码示例：
+
+	<property name="list">
+			<list>
+				<value>张三</value>
+				<value>10</value>
+				<ref bean="car"/>
+			</list>
+	</property>
 
 Set属性注入
 
+代码示例：
+
+	<property name="set">
+			<set>
+				<value>10</value>
+				<value>李四</value>
+				<ref bean="person"/>
+			</set>
+	</property>
+
 Map属性注入
 
+代码示例：
+
+	<property name="map">
+			<map>
+				<entry key="username" value="李四"></entry>
+				<entry key-ref="person" value-ref="car"></entry> 
+			</map>
+	</property>
+
 Property属性注入
+
+代码示例：
+
+	<property name="props">
+			<props>
+				<prop key="company">ITCAST</prop>
+				<prop key="price">10000</prop>
+			</props>
+	</property>
 
 ####c与p名称空间
 Spring2.0以后提供了xml的命名空间
@@ -296,6 +408,16 @@ Spring2.0以后提供了xml的命名空间
 + 使用p名称空间可以解决我们setter注入时<property>简化 
 + 使用c名称空间可以解决我们构造器注入时<constructor-arg>简化
 
+p属性注入：
+
+1. 引入：xmlns:p="http://www.springframework.org/schema/p"
+2. 属性注入<bean id="person1" class="cn.itheima.bean.Person" p:name="张三" p:car-ref="car1"/>
+
+c构造注入：
+
+1. 引入：xmlns:c="http://www.springframework.org/schema/c"
+2. 构造器 <bean id="person1" class="cn.itheima.bean.Person" c:name="张三" c:car-ref="car1"/>	
+
 ####SpEl
 spring expression language  是在spring 3.0之后提供的
 
@@ -303,14 +425,26 @@ spring expression language  是在spring 3.0之后提供的
 
 Spel表达式的格式  #{表达式}
 
+代码示例：
+
+	<bean id="person1" class="cn.itheima.namsapce.Person">
+		<property name="name" value="#{person.name}" />
+		<!-- <property name="dog" ref="dog1"/> -->
+		<property name="dog" value="#{dog1}"></property>
+		<property name="age" value="#{person.getAge()+10}"></property>
+	</bean>
+
 ###Spring注解开发
-在Spring中使用注解，则必须在applicationContext.xml文件中添加一个标签。作用是让Spring中常用的注解生效。
+在Spring中使用注解，则必须在applicationContext.xml文件中添加一个标签<context:annotation-config/>。作用是让Spring中常用的注解生效。
 
 ####完成bean注册的注解
 注解方式IOC步骤
 
 1. 导入aop jar包
 2. 引入名称空间context
+	xmlns:context="http://www.springframework.org/schema/context"
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
 3. 开启注解扫描
 4. 在需要被IOC的类上配置@Component
 
