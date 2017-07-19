@@ -36,6 +36,7 @@ beans,core,context,spEL四个jar包<br>
 ##IOC
 inversion of controller控制反转
 简单说：原来由我们自己实例化的对象交给spring容器来实例化
+
 原理：xml配置文件（统一管理对象）+工厂--->dom解析+反射
 	
 	//直接实现类new对象
@@ -80,6 +81,7 @@ ApplicationContext是BeanFactory的子接口。
 >注意：程序运行时报错
 >
 >java.lang.NoClassDefFoundError: org/apache/commons/logging/LogFactory
+>
 >原因:当前环境需要一个commons-loggin的jar包
 
 代码示例：
@@ -150,21 +152,21 @@ BeanFactory它采取延迟加载的方案，只有真正在getBean时才会实�
 1. FileSystemXmlAppliCationContext 根据文件路径获取
 2. ClassPathXmlApplicationContext  根据类路径获取
 
-	// 使用ClassPathXmlApplicationContext来获取Bean1
-	@Test
-	public void test2() {
-		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
-		Bean1 bean1 = (Bean1) applicationContext.getBean("bean1");
-		bean1.show();
-	}
-
-	// FileSystemXmlApplicationContext
-	@Test
-	public void test3() {
-		ApplicationContext applicationContext = new FileSystemXmlApplicationContext("src/applicationContext.xml");
-		Bean1 bean1 = (Bean1) applicationContext.getBean("bean1");
-		bean1.show();
-	}
+		// 使用ClassPathXmlApplicationContext来获取Bean1
+		@Test
+		public void test2() {
+			ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+			Bean1 bean1 = (Bean1) applicationContext.getBean("bean1");
+			bean1.show();
+		}
+	
+		// FileSystemXmlApplicationContext
+		@Test
+		public void test3() {
+			ApplicationContext applicationContext = new FileSystemXmlApplicationContext("src/applicationContext.xml");
+			Bean1 bean1 = (Bean1) applicationContext.getBean("bean1");
+			bean1.show();
+		}
 
 ApplicationContext它会在配置文件加载时，就会初始化Bean（*可实现预处理，提前预知配置文件是否存在问题*）,并且ApplicationContext它提供不同的应用层的Context实现。例如在web开发中可以使用WebApplicationContext.
 
@@ -442,15 +444,27 @@ Spel表达式的格式  #{表达式}
 
 1. 导入aop jar包
 2. 引入名称空间context
+
 	xmlns:context="http://www.springframework.org/schema/context"
 	http://www.springframework.org/schema/context
 	http://www.springframework.org/schema/context/spring-context.xsd
+
 3. 开启注解扫描
 4. 在需要被IOC的类上配置@Component
 
 >注意事项：
->在编写xml文件的时候，第一行一定不能写除了<?xml version="1.0" encoding="UTF-8"?>以外的任何东西
+>
+>+ 在编写xml文件的时候，第一行一定不能写除了<?xml version="1.0" encoding="UTF-8"?>以外的任何东西
+>
 >包括注释、空格、回车、换行符等等
+>
+>+ 在spring2.5后为@Component添加了三个衍生的注解:
+	1. @Repository 用于DAO层
+	2. @Service 用于service层
+	3. @Controller  用于表现层
+	
+>对于我们的bean所处在的位置可以选择上述三个注解来应用，如果你的bean不明确位置，就可以使用@Component.
+
 
 ####属性依赖注入
 简单的属性注入
@@ -549,4 +563,262 @@ Spel表达式的格式  #{表达式}
 
 	Classpath:applicationContext.xml 它代表的是在当前工程的类路径下(可以理解成是在src)下来查找applicationContext.xml文件。
 	contextConfigLocation它是在listener中声明的一个常量，描述的就是spring配置文件的位置。
+
+##AOP介绍
+###概述
+Aspect Oriented Programming 面向切面编程
+
+对业务逻辑各个部分进行隔离，降低耦合，提高程序的可重用性，提高开发效率。
+
+AOP：不修改原方法代码基础上动态的添加一些功能
+
+AspectJ：基于Java语言的AOP框架，Eclipse基金组织的开源项目。就是一种插件。包含表达式和编译器。
+
+**AOP与OOP区别**
+OOP（面向对象编程）针对业务处理过程的实体及其属性和行为进行抽象封装，以获得更加清晰高效的逻辑单元划分。
+
+而AOP则是针对业务处理过程中的切面进行提取，它所面对的是处理过程中的某个步骤或阶段，以获得逻辑过程中各部分之间低耦合性的隔离效果。这两种设计思想在目标上有着本质的差异。
+
+换而言之，OOD/OOP面向名词领域，AOP面向动词领域。
+
+
+###相关术语
++ 目标对象target
+	
+	被增强的对象
+
++ 连接点join point
+
+	被增强对象中的所有方法（因为都可以被代理）
+
++ 切入点pointcut
+
+	实际被增强的方法
+
++ 通知advice
+
+	动态代理中，增强功能的代码
+
++ 引介intrduction
+
+	作用在类上
+
++ 切面
+
+	切入点和通知的结合，指定把什么（通知）插入到哪里（切入点）去--->关系
+
++ 织入weaving
+
+	将切面应用到目标对象从而创建出AOP代理对象的过程
+
+	织入可以在编译期，类装载期，运行期进行。Spring采用动态织入，而aspectj采用静态织入。
+
++ 代理proxy
+
+	通知插入到切点对目标对象进行增强通过代理来完成
+
+##AOP实现原理
+###AOP底层实现
+静态AOP（AspectJ）：编译时增强
+
+动态AOP（Spring）：运行时增强
+
++ JDK动态代理
+
+	基于接口的代理
+	
+	代理与被代理是兄弟关系（实现同一接口）
+
++ CGLib动态代理
+
+	字节码代理
+
+	可以为没有实现接口的类做代理,也可以为接口类做代理。
+
+	代理与被代理是子父关系（继承）
+
+**问题：spring采用的是哪一种动态机制:**
+
++ 如果目标对象，有接口，优先使用jdk动态代理
+
++ 如果目标对象，无接口，使用cglib动态代理。
+
+##AOP开发
+###Spring的传统aop编程（手动）（了解流程）
+在传统的spring aop开发中它支持增强(advice)有五种:
+
+1.	前置通知  目标方法执行前增强  org.springframework.aop.MethodBeforeAdvice
+2.	后置通知  目标方法执行后增强 org.springframework.aop.AfterReturningAdvice
+3.	环绕通知  目标方法执行前后进行增强  org.aopalliance.intercept.MethodInterceptor
+4.	异常抛出通知 目标方法抛出异常后的增强 org.springframework.aop.ThrowsAdvice
+5.	引介通知 在目标类中添加一些新的方法或属性
+
+基本jar包
+
+1. bean
+2. core
+3. context
+4. expression
+5. aop
+6. 需要aop联盟的依赖jar包（aop-alliance包）
+
+实现步骤：
+
+1. 编写目标（target）
+2. 增强（advice）
+
+	1. 如果从前面插入通知需要实现MethodBeforeAdvice接口（before方法）
+	2. 如果从后面插入通知需要实现AfterReturningAdvice接口（afterReturning方法）
+	3. 如果从环绕插入通知需要实现MethodInterceptor接口（invoke方法）
+	
+3. 在applicationContext.xml的文件中进行配置
+	1. 目标
+	2. 通知
+	3. 切点
+	4. 切面（通知和切点的结合）
+	5. 代理
+4. 测试
+
+Spring的配置文件可以拆分。利用**<import resource=""/>**这个标签在applicationContext.xml中引入卸载其他文件中的配置。
+
+###基于AspectJ切点表达式的传统aop开发（半自动）
+**传统SpringAOP开发总结**
+
+1. 编写目标对象（target）
+2. 编写通知（advice）
+
+	传统aop开发中，通知要实现接口
+
+3. 在配置文件中配置切面
+
+	<aop:config>
+		<aop:advisor advice-ref="orderServiceAdvice" pointcut="execution(* cn.itheima.aop.OrderServiceImpl.*(..))"/>
+	</aop:config>	
+
+	<aop:config>来声明对aop进行配置
+	<aop:pointcut>用于声明切点
+	<aop:adviser>定义传统aop切面。传统的aop切面只能包含一个切点和一个增强
+	<aop:aspect>定义aspectJ框架的切面，可以包含多个切点和多个通知
+
+缺点：
+
+1. 通知类需要实现相应的接口
+  
+2. 通知的所有的方法只能同时去插入增强一个方法
+
+>注意：
+>
+1. 需要在xml配置文件中导入aop声明
+2. 因为我们使用aspectj的切面声明方式 需要在导入aspectj的jar包
+
+####关于切点表达式的写法
+spring中aop开发对aspectj的语法不是完全支持。
+
+在开发中使用的比较多的是execution语法
+
+1. execution(public **())所有的public方法
+2. execution(*cn.forest.aop.*(..))所有的aop报下的所有类的方法（不包含子包）
+3. execution(*cn.forest.aop..*(..))所有的aop包及其子包下的所有类的方法
+4. execution(* cn.forest.aop.IOrderService.*(..)) IOrderService接口中定义的所有方法
+5. execution(* cn.forest.aop.IOrderService+.*(..)) 匹配实现特定接口所有类的方法
+6. execution(* save*(..)) 区配所有的以save开头的方法
+
+
+###Spring整合AspectJ框架（全自动）
+Spring2.0以后支持jdk1.5注解，而整合aspectJ可以使用aspectJ语法。可以简化开发。
+
+Aspect框架定义的通知类型有6种：
+
+1.	前置通知Before 相当于BeforeAdvice
+2.	后置通知AfterReturning 相当于AfterReturningAdvice
+3.	环绕通知 Around 相当于MethodInterceptor
+4.	抛出通知AfterThrowing 相当于ThrowAdvice
+5.	引介通知DeclareParents 相当于IntroductionInterceptor
+6.	最终通知After 不管是否异常，该通知都会执行
+
+####基于xml开发
++ 前置通知
+
+	在aspectj中的增强可以不实现任何方法
+	
+		<aop:before method="check"
+		pointcut="execution(* com.forest3.service.StudentService.*(..))"></aop:before>
+
++ 后置通知
++ 环绕通知
+
+	可以将前置、后置、最终通知整合到一起
+
+		<aop:around method="work"
+		pointcut="execution(* com.forest3.service.StudentService.work(..))"></aop:around>
+
++ 抛出通知
+
+		<aop:aspect ref="teacherAdvice">
+		<!-- 抛出 -->
+		<aop:after-throwing method="exam" pointcut="execution(* com.forest3.service.StudentService.study(..))"></aop:after-throwing>
+		</aop:aspect>
+
++ 最终通知
+
+#####关于通知上的参数
+1.	在前置通知上可以添加JoinPoint参数
+通过它可以获取目标相关的信息
+
+	使用前置通知可以获取目标对象方法的信息，完成日志记录，权限控制
+
+2.	在后置通知上添加的参数
+
+	第二个参数val它可以获取目标方法的返回值
+
+	注意：需要在配置文件中配置
+
+3.	环绕通知上的参数
+
+	它是我们开发中应用最多的，可以完成日志操作，权限操作，性能监控，事务管理
+
+4.	抛出异常通知上的参数
+
+	第二个参数Throwable它是用于接收抛出的异常
+
+	注意:需要在配置文件中声明
+
+5.	最终通知上的参数
+
+	可以使用最终通知完成资源释放
+
+#####关于代理方式的选择
+代理实现有两种：
+
+1. jdk的proxy
+2. cglib
+
+spring框架默认情况下，会对有接口的类使用proxy代理了。没有接口的类使用cglib
+
+Proxy-target-class的值默认是false,它代表有接口使用proxy代理
+问题：如果现在对目标要使用cglib代理(不考虑是否有接口)？
+只需要将proxy-target-class设置为true.
+
+####基于注解的方式
+1. 编写目标
+
+	在spring的配置文件中配置扫描注解
+
+2. 编写增强
+
+	使用@Aspect来声明切面
+
+	使用@Before来声明前置通知
+
+	>注意:必须在spring的配置文件中开启aspectJ注解自动代理功能。
+
+3. 测试
+
+#####使用@Pointcut注解定义切点
+定义两个方法，在其上使用@Pointcut注解，定义切点表达式 
+
+
+
+
+	
 
