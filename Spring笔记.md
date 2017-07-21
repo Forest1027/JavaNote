@@ -767,21 +767,41 @@ Aspect框架定义的通知类型有6种：
 
 	使用前置通知可以获取目标对象方法的信息，完成日志记录，权限控制
 
+		 public void before(JoinPoint jp) {
+			System.out.println("拦截的目标类:" + jp.getSignature().getDeclaringTypeName());
+			System.out.println("拦截的方法名称:" + jp.getSignature().getName());
+			System.out.println("前置通知before");
+	 	}
+
 2.	在后置通知上添加的参数
 
 	第二个参数val它可以获取目标方法的返回值
 
 	注意：需要在配置文件中配置
 
+		//需要在配置文件中配置
+		 <aop:after-returning method="afterReturning" pointcut-ref="pointCutAll" returning="val"/>
+
+		  public void afterReturning(Object val) {
+			System.out.println("目标方法返回值:" + val);
+			System.out.println("后置通知");
+		  }
+
 3.	环绕通知上的参数
 
-	它是我们开发中应用最多的，可以完成日志操作，权限操作，性能监控，事务管理
+	它是我们开发中应用最多的，可以完成日志操作，权限操作，性能监控，事务管理。可以执行目标行为。
 
 4.	抛出异常通知上的参数
 
 	第二个参数Throwable它是用于接收抛出的异常
 
 	注意:需要在配置文件中声明
+
+		<aop:after-throwing method="afterThrowing" pointcut-ref="pointCutAll" throwing="tx"/>
+
+	   	public void afterThrowing(Throwable tx) {
+			System.out.println("发现了异常。。。。"+tx);
+	   	}	
 
 5.	最终通知上的参数
 
@@ -817,8 +837,428 @@ Proxy-target-class的值默认是false,它代表有接口使用proxy代理
 #####使用@Pointcut注解定义切点
 定义两个方法，在其上使用@Pointcut注解，定义切点表达式 
 
+##Spring JDBC模板介绍
+类似于DBUtils
 
+jar包：jdbc、事务、数据库驱动
 
+**快速入门代码**
 
+	//c3p0获取数据源方式
+	ComboPooledDataSource dataSource2 = new ComboPooledDataSource();
 	
+	//spring框架内置连接池获取数据源方式
+	DriverManagerDataSource dataSource = new DriverManagerDataSource();
+	dataSource.setDriverClassName("");
+	dataSource.setUrl("");
+	dataSource.setUsername("");
+	dataSource.setPassword("");
+	
+	JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+	jdbcTemplate.update("");
+
+以上数据源的获取方式以及JdbcTemplate都是使用new创建对象。那么既然是在spring框架中，我们当然可以使用ioc，将创建对象的权利交给spring框架。
+
+因此，可以使用以下配置。
+
+	<bean id="driverManagerDateSource"
+				class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql:///springtest" />
+		<property name="username" value="root" />
+		<property name="password" value="root"></property>
+	</bean>
+	
+	
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="driverManagerDateSource"/>
+	</bean>
+
+###引入外部属性文件
+Spring支持将经常修改属性，在properties文件中声明，在xml配置文件中引入外部的properties文件的信息。
+	
+	//db.properties中
+	jdbc.driverClass=com.mysql.jdbc.Driver
+	jdbc.jdbcUrl=jdbc:mysql:///springtest
+	jdbc.user=root
+	jdbc.password=123
+	
+	//applicationContext.xml
+	 <!-- jdbc -->
+	<context:property-placeholder location="classpath:db.properties"/>
+	<import resource="./aop2.xml"/>
+
+	//aop2.xml。以下两个配置一定要有，因为要将两者都纳入spring的管理中，才能让spring来new对象、注入对象。
+	//另外，注意c3p0中的配置${}用这个符号引用配置文件中设置的值
+	  <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+     	<property name="driverClass" value="${jdbc.driverClass}"></property>
+     	<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+      	<property name="user" value="${jdbc.user}"></property>
+      	<property name="password" value="${jdbc.password}"></property>
+     </bean>
+     <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+     	<property name="dataSource" ref="dataSource"></property>
+     </bean>
+
+从context:property-placeholder加载的属性文件取属性值
+
+@Value("${car_name}")
+
+###JDBCTemplate CRUD
+####增删改
+
+	jdbcTemplate.update("update t_user set name=? where id=?", "tom", 1);
+	jdbcTemplate.update("insert into t_user values(null,?,?,?)", "赵六", 30, "男");
+	jdbcTemplate.update("delete from t_user where id=?", 4);
+
+####查询
+#####返回简单数据
+	String name = jdbcTemplate.queryForObject("select name from t_user where id=?", String.class, 2);
+	Integer count = jdbcTemplate.queryForObject("select count(*) from t_user", Integer.class);
+
+#####返回复杂对象
+
+	User user = jdbcTemplate.queryForObject("select * from t_user where id=?",new RowMapper<User>(){
+		@Override
+		public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+			int id = rs.getInt(1);
+			String name = rs.getString(2);
+			User user = new User();
+			return user;
+		}
+	}, 1);
+
+
+	List<User> list = jdbcTemplate.query("select * from t_user",new RowMapper<User>(){
+		@Override
+		public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+			
+			int id = rs.getInt(1);
+			String name = rs.getString(2);
+			User user = new User();
+			
+			return user;
+		}
+	});
+
+>注意：如果只返回一个domain对象，可以使用queryForObject方法，如果返回的是List<?>对象，可以使用query方法，但是都需要使用RowMapper来对ResultSet进行处理。
+
+
+一个rowmapper对象就对应着数据库中的一行记录。
+
+一般在开发中使用BeanPropertyRowMapper,此对象能将查询到的数据一次性封装到实体类中(*实体类必须提供一个无参数的public构造方法,类中的bean属性名称与表中的列要对应*)。这个类是在spring2.5后提供
+
+一般在实体类与数据库的表中的字段不能一一对应时，则使用rowmapper进行一个属性一个属性的封装。
+
+或者在查询的时候使用表的别名，将数据库的字段与实体类的属性对应起来。
+
+##Spring事务管理
+使用dao需要往其中注入JdbcTemplate
+
+###转账案例
+
+**方法一：dao通过@Autowired注入JdbcTemplate**
+
+步骤：
+
+1. jdbcTemplate在Spring容器中	
+		  
+	    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="driverManagerDateSource"/>
+	    </bean>
+
+2. Dao对象自己在在Spring容器中
+
+    	<bean id="userDao" class="cn.itheima.dao.UserDao"/>
+
+3. Dao类直接通过@Autowired注入JdbcTemplate 
+  
+	    public class UserDao {	
+		  @Autowired
+		  private JdbcTemplate jdbcTemplate;
+	    }	
+
+*使用@AutoWired的前提条件：*
+
+1. 自己在spring的管理中
+2. 依赖注入的对象也在spring的管理中
+
+>注意：**此种办法不用set方法设置属性**
+>
+>@Autowired注解的意思就是使用方要求spring给自己注入一个对象，那么这个对象必须要在spring的管理中。
+>
+>并且，spring要能够给使用方注入对象，也就意味着spring也能管理使用方。
+>
+>因此，使用@Autowired注解，使用方和被注入方都需要处于spring的管理之中。（*处于管理的配置，可以是xml，也可以是注解*）
+
+**方法二：dao通过property属性注入JdbcTemplate**
+
+1. jdbcTemplate在Spring容器中
+			  
+		<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		   <property name="dataSource" ref="driverManagerDateSource"/>
+		</bean>
+
+2.	Dao对象自己在在Spring容器中
+
+    	<bean id="userDao" class="cn.itheima.dao.UserDao"/>
+
+3.  Dao提供set属性
+
+    public class UserDao {
+		private JdbcTemplate jt;
+		public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+			this.jt = jdbcTemplate;
+		}
+	}	
+	
+4.  在xml bean配置property注入JdbcTemplate
+     
+		<bean id="userDao" class="cn.itheima.dao.UserDao">
+			<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		</bean>
+
+方法二（set注入方法）的前提条件：
+
+1. 被注入对象在容器中
+2. 调用对象在容器中
+3. 被注入对象要有set方法
+
+**方法三：使用JdbcDaoSupport**
+
+步骤：
+
+1. Dao类继承JdbcDaoSupport
+2. 给Dao对象注入dataSource这里的datasource是父类的属性）
+
+		<bean id="userDao" class="cn.itheima.dao.UserDao">
+		 <property name="dataSource" ref="c3p0DataSource"></property>
+		</bean>
+
+3. 在Dao方法里面直接getJdbcTemplate(无需另外配置)
+
+在service层调用dao的方法的流程：
+
+AccountServiceImpl--DI-->AccountDAOImpl---DI---->JdbcTemplate-----DI---->dataSource
+
+	//service层
+	public class AccountServiceImp implements IAccountService{
+		@Autowired
+		private IAccountDao ad;
+	
+		@Override
+		public void transferMoney(String inname, String outname, double money) {
+			//从outname转出钱
+			ad.accountIn(inname, money);
+			//转钱给inname
+			ad.accountOut(outname, money);
+		}
+	}
+
+	//dao层。继承JdbcDaoSupport，该对象里面掉了dataSourse。
+	public class AccountDaoImp extends JdbcDaoSupport implements IAccountDao{
+	
+		@Override
+		public void accountOut(String outname, double money) {
+			this.getJdbcTemplate().update("update account set money=money-? where name=?",money,outname);
+		}
+	
+		@Override
+		public void accountIn(String inname, double money) {
+			this.getJdbcTemplate().update("update account set money=money+? where name=?",money,inname);
+		}
+	}
+
+	//测试类。注意注释掉的部分。在使用spring和junit4结合的注解时，只能采用autowired注入属性的方法，不能采取set注入属性的方法。
+	@RunWith(SpringJUnit4ClassRunner.class)
+	@ContextConfiguration(locations="classpath:applicationContext.xml")
+	public class AccountServiceImpTest {
+		@Autowired
+		private IAccountService service;
+	
+		/*public IAccountService getService() {
+			return service;
+		}
+	
+		public void setService(IAccountService service) {
+			this.service = service;
+		}*/
+	
+		@Test
+		public void testTransferMoney() {
+	//		IAccountService service = new AccountServiceImp();
+			service.transferMoney("fox", "tom", 500);
+		}
+	
+	}
+
+	//配置文件。注意：以下注释中的代码是不可以加的，加了会报错。因为各个类中的注入方式选择的是autowired注入。这种注入方式不需要提供set方法，配置中也不能加property标签。
+	<!-- service/dao层配置 -->
+	<bean id="accountService" class="com.forest5.service.AccountServiceImp">
+		<!-- <property name="ad" ref="accountDao"></property> -->
+	</bean>
+	<bean id="accountDao" class="com.forest5.dao.AccountDaoImp">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!-- 测试 -->
+	<bean id="test" class="com.forest5.tests.AccountServiceImpTest">
+		<!-- <property name="service" ref="accountService"></property> -->
+	</bean>
+
+###Spring事务管理机制
+Spring事务管理的四个优点:
+
+1.	提供一致的对于不同的事务管理的API
+2.	支持声明式事务管理(重点)
+3.	编程事务管理(在开发中应用比较少)
+4.	优秀的整合与Spring的数据访问
+我们重点讲解spring的事务管理的相关的API，还有声明式事务管理
+
+Spring事务管理主要提供了三个接口来完成
+
+1. org.springframework.transaction.PlatformTransactionManager
+这是一个事务管理器，可以来选择相关的平台(jdbc  hibernate  jpa…)
+2.	TransactionDefinition
+它定义事务的一些相关信息 例如 隔离 传播 超时 只读
+3.	TransactionStatus
+它主要描述事务具体的运行状态
+
+**PlatformTransactionManager**
+
+平台事务管理器
+
+在不同的持久化层解决技术它的事务代码不一样。
+
++ JDBC开发
+
+	Connection con=……;
+
+	con.setAutoCommit(false);//开启事务
+
+	con.rollback();
+
+	con.commit();
+
++ Hibernate开发
+
+	Session session=….;
+
+	Transaction t=session.beginTransaction();
+
+	t.commit();
+
+	t.rollback();
+
+>DataSourceTransactionManager 主要针对于JdbcTemplate开发  MyBatis开发
+>
+>HibernateTransactionManasger主要针对于Hibernate开发
+>
+>JpaTransactionManager 主要针对于JPA开发。
+
+**TransactionDefinition**
+
+描述的是事务的定义信息。TransactionDefinition中定义了大量的常量
+
++ 隔离
+	+ ISOLATION_DEFUALT 它使用后端数据库的默认隔离级别(spring中选项)
+	+ ISOLATION_READ_UNCOMMITTED 不能解决问题，会发生脏读 不可重复读 虚读
+	+ ISOLATION_READ_COMMITTED 可以解决脏读 会产生不可重复读与虚读。
+	+ ISOLATION_REPEATABLE_READ 可以解决脏读，不可重复读 解决不了虚读
+	+ ISOLATION_SERIALIZABLE 串行化，可以解决所有问题，但效率低下
+	
+	对于不同的数据库，它的底层默认事务隔离级别不一样。
+
+	Oracle数据库它默认的是read_committed
+
+	Mysql数据库它默认的是repeatable_read.
+
++ 超时
+	+ 默认值是-1 它使用的是数据库默认的超时时间。
+	
++ 只读
+	+ 它的值有两个true/false,一般是在select操作时选择true
+	
++ 传播
+	+ 两个被事务管理的方法互相调用问题，被调用方法对调用者带来事务的处理态度。
+	+ required：b方法中调用a方法。如果a方法中有事务，那么就使用a的事务。没有事务带过来，就自己开启事务。
+	+ never：a带事务过来，就报错
+	+ mandatory：a带事务就用a的事务；不带事务就报错
+
+>定义传播行为的常量详解
+>
+>以下三种是常用操作
+>
+>+ PROPAGATION_REQUIRED 默认值 两个操作处于同一个事务，如果之前没有事务，新建一个事务
+>
+>+ PROPAGATION_REQUIRES_NEW
+两个操作处于不同的事务
+>
+>+ PROPAGATION_NESTED
+它是一种嵌套事务，它是使用SavePoint来实现的。事务回滚时可以回滚到指定的savepoint,注意：它只对DataSourceTransactionManager有作用
+>
+>以下四种不常用
+>
+>+ PROPAGATION_SUPPORTS 支持当前事务，如果不存在，就不使用事务
+>
+>+ PROPAGATION_MANDATORY 支持当前事务，如果不存在，抛出异常
+>
+>+ PROPAGATION_NOT_SUPPORTED 以非事务运行，如果有事务存在，挂起当前事务
+>
+>+ PROPAGATION_NEVER 以非事务运行，如果有事务存在，抛出异常
+
+	DefaultTransactionDefinition transactionDefinition = new  DefaultTransactionDefinition();
+
+	transactionDefinition.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+
+	transactionDefinition.setTimeout(transactionDefinition.TIMEOUT_DEFAULT);
+
+	transactionDefinition.setReadOnly(true);
+
+	//定义传播行为
+	transactionDefinition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+
+**TransactionStatus**
+
+它定义了事务状态信息，在事务运行过程中，得到某个时间点的状态
+
+###声明式事务管理
+####事务管理方式
+1.	编码方案 不建议使用，它具有侵入性。在原有的业务代码基础上去添加事务管理代码
+2.	声明式事务控制，基于AOP对目标进行代理，添加around环绕通知。
+
+	这种方案，它不具有侵入性，不需要修改原来的业务代码
+
+	spring的事务管理采用aop的方式
+
+####xml配置声明式事务管理方案
+1. 定义事务管理器
+
+		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="c3p0DataSource"/>
+		</bean>
+
+2. 定义事务通知
+
+		<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+		<tx:method name="save*"/>
+		<tx:method name="update*"/>
+		<tx:method name="delete*"/>
+		<tx:method name="query*" read-only="true"/>
+		<tx:method name="find*" read-only="true"/>
+		<tx:method name="get*" read-only="true"/>
+		</tx:attributes>
+		</tx:advice>
+			
+3. 配置切面
+
+		<aop:config>
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* *..IAccountService.*(..))"/>
+		</aop:config>
+
+####注解配置声明式事务管理方案
+
+使用注解看起来好像简化了代码。但是实际上，如果使用xml，可以批量去操作、管理。
+
+图：事务管理器
 
