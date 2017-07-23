@@ -1240,14 +1240,14 @@ Spring事务管理主要提供了三个接口来完成
 2. 定义事务通知
 
 		<tx:advice id="txAdvice" transaction-manager="transactionManager">
-		<tx:attributes>
-		<tx:method name="save*"/>
-		<tx:method name="update*"/>
-		<tx:method name="delete*"/>
-		<tx:method name="query*" read-only="true"/>
-		<tx:method name="find*" read-only="true"/>
-		<tx:method name="get*" read-only="true"/>
-		</tx:attributes>
+			<tx:attributes>
+				<tx:method name="save*"/>
+				<tx:method name="update*"/>
+				<tx:method name="delete*"/>
+				<tx:method name="query*" read-only="true"/>
+				<tx:method name="find*" read-only="true"/>
+				<tx:method name="get*" read-only="true"/>
+			</tx:attributes>
 		</tx:advice>
 			
 3. 配置切面
@@ -1262,3 +1262,155 @@ Spring事务管理主要提供了三个接口来完成
 
 图：事务管理器
 
+##Spring整合Hibernate以及Struts2
+###jar包分析
+struts2 2.3.24
+
+spring 4.2.4
+
+hibernate 5.0.7
+
+####struts整合需要的jar包
++ Asm 是关于字节码操作
++ Commons-fileupload 关于文件上传
++ Commons-io 关于io流操作工具
++ Commons-lang 也是一个工具，包含了关于数据与字符串操作
++ Freemaker 标签库模板文件
++ Javassist 它也是关于字节码操作，动态代理可以使用它实现(类似于cglib)
++ Log4j关于日志
++ Ognl 关于ognl表达式
++ Struts2-core  xwork-cor  struts2框架底层是使用xwork
+
+Struts2与spring整合还需要(struts
+提供的)---**struts2-spring-plugin-2.3.24.jar**(*创建action等的权利从struts转移到spring*)
+和 **spring-web-4.2.4.release.jar**（*Spring在web项目中需要导*）
+
+####hibernate整合需要的jar包
++ Antlr 语法解析包
++ Dom4j 解析xml
++ Geronimo-jta  apache geronimo它是一个开源javaEE服务器 Geronimo-jta是这个开源项目提供jar包，在hibernate中是关于jta事务相关
++ Hibernate-commoins-annotations
+这个包是我们在hibernate下来使用jpa相关的注解，这样它不依赖于hibernate
++ Hibernate-core 开发hibernate必须
++ Hibernate-jpa 它是关于hibernate对jpa的支持
++ Jandex 用于索引annotation
++ Javassist 关于字节码操作(注意:strtus2中也引入这个jar包了)
++ Jboss-logging 它是关于jboss统一日志处理
+
+**spring-orm-4.2.4.RELEASE.jar**
+####基于xml方式整合所需的jar包
+
+
+###基于xml方式整合
+####前期配置文件
++ Strtsu2框架   src/strtus.xml
++ Hibernate框架   src/hibernate.cfg.xml
+  	在domain有 Xxx.hbm.xml
++ Spring框架   src/applicationContext.xml
++ 关于日志   log4j.properties
++ 关于数据库连接   db.properties
++ web.xml	配置struts过滤器，配置spring的ContextLoaderListener
+
+####Spring整合hibernate
+核心：sessionFactory交给spring来管理创建---》通过orm这个jar包(localsessionfactory)
+
+**方式一：零障碍整合（用的少）**
+
+我们只需要使用spring中提供的一个LocalSessionFacotry来加载Hibernate的配置文件。
+
+ssh-xml工程加载到服务器后，如果可以自动创建表，就代表spring整合hibernate ok.
+注意:我们必须配置spring的ContextLoaderListener（*这个ContextLoaderListener它实现了ServletContextListener在这个listener中，当服务器启动时，将ApplicationContext对象，其实是它的一个实现类WebApplicationContext,对象存入到了ServletContext中。*）
+
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="configLocation" value="classpath:hibernate.cfg.xml"/>
+	</bean>
+
+####spring整合hibernate后的dao
+spring整合hiberante后，我们的dao只需要继承HibernateDaoSupport类
+在HibernateDaoSupport中只需要注入SessionFactory就可以获得到HibernateTemplate，它是对hibernate操作的一个简单封装，可以让我们方便使用原来hibernate的操作.
+
+
+**方式二(spring管理hibernate配置)**
+
+不在需要hibernate.cfg.xml文件，所有关于hibernate.cfg.xml文件中的配置都在spring的配置文件中来配置。
+
+核心是创建LocalSessionFactoryBean来完成spring管理hibernate中的SessionFactory
+
+	<!-- 数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="user" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+	<!-- jdbc配置文件的位置 -->
+	<context:property-placeholder location="classpath:db.properties" />
+	<!-- hibernate核心文件的配置 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<value>
+				hibernate.show_sql=true
+				hibernate.format_sql=true
+				hibernate.dialect=org.hibernate.dialect.MySQLDialect
+				hibernate.hbm2ddl.auto=update
+			</value>
+		</property>
+		<property name="mappingDirectoryLocations">
+		<!-- mappingDirectoryLocations这个属性可以加载类路径下所有文件 -->
+			<list>
+				<value>classpath:com/forest1/domain</value>
+			</list>
+		</property>
+	</bean>
+
+####spring整合struts2
+**前期整合工作**
+
+创建一个addUser.jsp页面
+
+创建UserAction类
+
+#####pring整合struts2原理分析
+1.	spring整合struts2框架必须导入一个jar包
+struts2-spring-plugin.jar
+	作用：改变struts2的对象工厂。以前action等是由struts自己的对象工厂创建，通过这个包，转化为spring的对象工厂来创建了（buildbean方法）。
+
+2.	struts2框架配置文件加载顺序
+
+	a. default.properties
+
+	b. struts-default.xml
+
+	c. strtus-plugin.xml
+
+3.	在struts2框架中所有的action interceptor  result全是bean,在struts2框架中默认是使用strtus2自己bean初化操作.
+
+4.	当我们在工程中导入struts2-spring-plugin.jar文件
+就会加载这个包下的strtus-plugin.xml
+
+5. 
+
+通过上述分析，spring整合struts2框架它的方式有两种
+
+1.	spring管理action（简单说就是在applicationContext.xml文件中来声明action）
+2.	action自动装配service
+
+####spring整合struts2框架方式一
+这种方案是基于spring管理action
+
+1.	在applicationContext.xml文件中配置action
+2.	action中
+3.	struts.xml中
+	配置伪类名方式（id），而非以前的全类名
+
+####Spring整合struts2框架方式二(action中自动注入service)
+全类名方式
+
+
+###基于注解方式整合
+
+jar包
+
+在原来的基础上再多导入一个struts2-convention-plugin
