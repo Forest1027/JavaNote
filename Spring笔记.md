@@ -439,6 +439,13 @@ Spel表达式的格式  #{表达式}
 ###Spring注解开发
 在Spring中使用注解，则必须在applicationContext.xml文件中添加一个标签<context:annotation-config/>。作用是让Spring中常用的注解生效。
 
+>使用@Autowired注解时，不需要开启扫描也不需要在所在类上配置@Component之流，但是需要在applicationContext.xml中配置<context:annotation-config/>标签，让autowired生效。
+>
+>除非一种情况，即,使用junittest的时候
+>
+>另外，使用spring整合junit4的注解 @Runwith @ContextConfiguration时，只能使用@Autowired，不能使用set属性注入的方式（这种方式即使将所在类配置进了applicationContext.xml也不行。*因为，所在类首先加载，然后根据其上的ContextConfiguration加载applicationContext.xml。如此，applicationContext.xml会再创建一个该类，但是这个类不是一开始运行的那个类了*）
+
+
 ####完成bean注册的注解
 注解方式IOC步骤
 
@@ -1390,12 +1397,10 @@ struts2-spring-plugin.jar
 4.	当我们在工程中导入struts2-spring-plugin.jar文件
 就会加载这个包下的strtus-plugin.xml
 
-5. 
+5. 通过上述分析，spring整合struts2框架它的方式有两种
 
-通过上述分析，spring整合struts2框架它的方式有两种
-
-1.	spring管理action（简单说就是在applicationContext.xml文件中来声明action）
-2.	action自动装配service
+	1.	spring管理action（简单说就是在applicationContext.xml文件中来声明action）
+	2.	action自动装配service
 
 ####spring整合struts2框架方式一
 这种方案是基于spring管理action
@@ -1414,3 +1419,128 @@ struts2-spring-plugin.jar
 jar包
 
 在原来的基础上再多导入一个struts2-convention-plugin
+
+##ssh综合练习
+###jar包导入
+###包的建立
+###注解环境搭建
+struts2的bug，在action上面@Controller没用，因为在spring去创建action的时候，beanname是由struts传过去的，不管有没有controller（有没有将action纳入spring的管理），spring都能根据beanname这个类名去运用反射创建action
+
+注意：
+
+spring整合struts和hibernate，在applicationContext.xml中的三点配置
+
+1. spring注解开发中，要在applicationContext里面配置<context:component-scan base-package="com.forest"/>
+
+2. spring整合hibernate的注解，是要在applicationContext.xml中声明sessionFactory的地方，将原本的
+
+		<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+			<property name="dataSource" ref="dataSource" />
+			<property name="hibernateProperties">
+				<value>
+					hibernate.show_sql=true
+					hibernate.format_sql=true
+					hibernate.dialect=org.hibernate.dialect.MySQLDialect
+					hibernate.hbm2ddl.auto=update
+				</value>
+			</property>
+			<property name="mappingDirectoryLocations">
+				<!-- mappingDirectoryLocations这个属性可以加载类路径下所有文件 -->
+				<list>
+					<value>classpath:com/forest1/domain</value>
+				</list>
+			</property>
+		</bean>
+
+	变成（即只有最后一个property有变化，*此外，在这个配置之前，数据源也还是照常配置。*）：
+
+		<!-- hibernate核心文件的配置,声明sessionFactory -->
+		<bean id="sessionFactory"
+			class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+			<property name="dataSource" ref="dataSource" />
+			<property name="hibernateProperties">
+				<value>
+					hibernate.show_sql=true
+					hibernate.format_sql=true
+					hibernate.dialect=org.hibernate.dialect.MySQLDialect
+					hibernate.hbm2ddl.auto=update
+				</value>
+			</property>
+			<!-- 映射相关的注解 -->
+			<property name="packagesToScan">
+				<list>
+					<value>com.forest.domain</value>
+				</list>
+			</property>
+		</bean>
+
+3. 事务管理器的配置。从如下：
+	
+		<!-- 事务管理器 -->
+		<bean id="transactionManager"
+			class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+			<property name="sessionFactory" ref="sessionFactory" />
+		</bean>
+		<!-- 事务通知 -->
+		<tx:advice id="txAdvice" transaction-manager="transactionManager">
+			<tx:attributes>
+				<tx:method name="add" />
+				<tx:method name="del" />
+				<tx:method name="update" />
+				<tx:method name="find*" read-only="true" />
+			</tx:attributes>
+		</tx:advice>
+		<!-- 切面 -->
+		<aop:config>
+			<aop:advisor advice-ref="txAdvice"
+				pointcut="execution(* com.forest1.service.*..*(..))" id="myPointcut" />
+		</aop:config>
+
+	到：
+
+		<!-- 事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sesstionFactory" ref="sessionFactory"/>
+	</bean>
+	<!-- 开启事务注解驱动 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+ 
+在applicationContext.xml中的用到的标签需要在文件头上配置，如tx,aop等。
+
+
+开发中，图片不会放在tomcat中，会放在磁盘上某处，并配置一个虚拟路径。不然每次重启tomat图片就不见了。
+
+###添加用户
+
+前端页面表单提交的地方。注意cusName，cusPhone等是name，而不是id。如果是id，无法在表单提交的时候传给后台。如果使用的name，那么会存为属性值，可以被后台获取到。
+
+	<form role="form" class="bg" method="post" encType="multipart/form-data"
+		action="${pageContext.request.contextPath}/customer/addCustomer">
+		<div class="form-group">
+			<label for="CUSTOMER NAME">CUSTOMER NAME</label> <input type="text"
+				class="form-control" name="cusName" placeholder="CUSTOMER NAME">
+		</div>
+		<div class="form-group">
+			<label for="PHONE NUMBER">PHONE NUMBER</label> <input type="text"
+				class="form-control" name="cusPhone" placeholder="PHONE NUMBER">
+		</div>
+		<div class="form-group">
+			<label for="CUSTOMER IMAGE">CUSTOMER IMAGE</label> <input type="file"
+				name="cusImg">
+		</div>
+		<div class="checkbox">
+			<label> <input type="checkbox"> Check me out
+			</label>
+		</div>
+		<button type="submit" class="btn btn-default">Submit</button>
+	</form>
+
+###删除用户
+	//删除客户
+	function delCustomer(customerId) {
+		location.href="${pageContext.request.contextPath}/customer/delCustomer?id="+customerId;
+	}
+
+删除客户的点击事件绑定的函数。这时只需要将id传给后台，删除对应id的用户。不需要获取数据回显页面，所以采取这种带参数的方法。可以和查询订单的点击事件绑定函数对比。
+
+###查询订单
