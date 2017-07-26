@@ -439,6 +439,8 @@ Spel表达式的格式  #{表达式}
 ###Spring注解开发
 在Spring中使用注解，则必须在applicationContext.xml文件中添加一个标签<context:annotation-config/>。作用是让Spring中常用的注解生效。
 
+>**注意：**
+>
 >使用@Autowired注解时，不需要开启扫描也不需要在所在类上配置@Component之流，但是需要在applicationContext.xml中配置<context:annotation-config/>标签，让autowired生效。
 >
 >除非一种情况，即,使用junittest的时候
@@ -1542,5 +1544,13 @@ spring整合struts和hibernate，在applicationContext.xml中的三点配置
 	}
 
 删除客户的点击事件绑定的函数。这时只需要将id传给后台，删除对应id的用户。不需要获取数据回显页面，所以采取这种带参数的方法。可以和查询订单的点击事件绑定函数对比。
+
+这里的参数只能是"id",不能写其他的。
+
+另外，在删除订单时，不可以用上述类似方法，即：
+
+	location.href="${pageContext.request.contextPath}/order/deleteOrder?id="+orderId;
+
+如果要是该方法成立，则必须在customerAction中定义deleteOrder方法，并且定义orderId属性用于接收数据。不然，这里的location.href访问的还是CustomerAction，而不是OrderAction
 
 ###查询订单
