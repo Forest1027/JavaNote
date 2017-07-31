@@ -208,3 +208,64 @@ easyui-menu
 进度条窗口
 
 ##5、基础设置模块业务分析
+
+#2017/7/31
+##9、收派标准添加窗口制作
+整合jpa的代码
+
+	<!-- 整合JPA配置 -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="cn.itcast.bos.domain" />
+		<property name="persistenceProvider">
+			<bean class="org.hibernate.jpa.HibernatePersistenceProvider" />
+		</property>
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="generateDdl" value="true" /><!-- 是否自动建表 -->
+				<property name="database" value="ORACLE" />
+				<property name="databasePlatform" value="org.hibernate.dialect.Oracle10gDialect" />
+				<property name="showSql" value="true" />
+			</bean>
+		</property>
+		<property name="jpaDialect">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+		</property>
+
+	<!--下面是可以不配置的-->
+		<property name="jpaPropertyMap">
+			<map>
+				<entry key="hibernate.query.substitutions" value="true 1, false 0" />
+				<entry key="hibernate.default_batch_fetch_size" value="16" />
+				<entry key="hibernate.max_fetch_depth" value="2" />
+				<entry key="hibernate.generate_statistics" value="true" />
+				<entry key="hibernate.bytecode.use_reflection_optimizer"
+					value="true" />
+				<entry key="hibernate.cache.use_second_level_cache" value="false" />
+				<entry key="hibernate.cache.use_query_cache" value="false" />
+			</map>
+		</property>
+	</bean>
+
+整合jpa相比于整合hibernate，多出了persistenceProvider和jpaVendorAdapter。整合hibernate时,只需要配置hibernate的properties就好了。
+
+>注意：
+>出现complition failure时，将父工程runas-mavenInstall（**这个有什么用？**）。然后在子项目上runas-complie一下，重新编译
+
+在此处，需要在点击‘增加’的时候，弹出表单。所以要做的是在点击该按钮的时候触发点击事件
+
+##10、收派标准添加表单客户端校验
+##11、服务端编写
+struts2框架使用，要注意包名含有action、struts、web等，类名以action结尾。这样才能被扫描到
+
+>注意：
+>
+>转发和重定向的区别：
+>
+>1、转发地址栏不会变，重定向地址栏会变化
+>
+>2、转发一次请求一次响应，重定向二次请求二次响应
+>
+>3、转发只能在当前容器跳转，重定向可以跳到任意网站
+
