@@ -269,3 +269,25 @@ struts2框架使用，要注意包名含有action、struts、web等，类名以a
 >
 >3、转发只能在当前容器跳转，重定向可以跳到任意网站
 
+**补充：**
+
+@Actions注解的作用
+
+	 @Actions( { @Action("/one/url"), @Action("/another/url") })  
+    public String execute() {  
+        message = "经过HelloWorld3的处理";  
+        return SUCCESS;  
+    }  
+
+本例中在String execute()方法上使用了@Actions和@Action注解。其中@Actions注解包含@Action("/one/url")和@Action("/another/url")注解。这样的注解除了可以通过http://应用服务器ip:端口/应用/hello-world3访问com.example.actions.HelloWorld3,并最终显示http://应用服务器ip:端口/应用/hello-world3.jsp之外，还有两种访问方式：
+
+即：
+
+通过http://应用服务器ip:端口/应用/one/url,访问com.example.actions.HelloWorld3,并最终显示http://应用服务器ip:端口/应用/one/url.jsp。
+
+通过http://应用服务器ip:端口/应用/another/url,访问com.example.actions.HelloWorld3,并最终显示http://应用服务器ip:端口/应用/another/url.jsp。
+这样就达到了一个ACTION中的一个方法，响应多个不同的URL的效果。
+
+ 使用@Action注解解决一个ACTION中的多个方法，其中每个方法响应不同的URL.
+
+这是实际项目开发过程中最常用的。
