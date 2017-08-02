@@ -291,3 +291,95 @@ struts2框架使用，要注意包名含有action、struts、web等，类名以a
  使用@Action注解解决一个ACTION中的多个方法，其中每个方法响应不同的URL.
 
 这是实际项目开发过程中最常用的。
+
+#2017/8/2
+##1、SpringData原理和api使用
+	<!-- 整合Springdata -->
+	<jpa:repositories base-package="com.forest.bos.dao"></jpa:repositories>
+
+*注意事项：*
+
+在整合springdata的时候，指定包一定要指定继承了jparepository的接口所在的那个包，包里只能有这种接口。所以不能写com.forest.bos：）
+
+**SpringData的意义**
+
+jpa（oracle制定）只整合了关系型数据库，因此SpringData（Spring制定）出现了。
+
+SpringData整合了所有。
+
+>在与第三方整合这方面，Spring做了持久化这一块的工作，我个人的感觉是Spring希望把持久化这块内容也拿下。
+>
+>于是就有了Spring-data-**这一系列包。包括，Spring-data-jpa,Spring-data-template,Spring-data-mongodb,Spring-data-redis，还有个民间产品，mybatis-spring，和前面类似，这是和mybatis整合的第三方包，这些都是干的持久化工具干的事儿。
+
+SpringData出现的目的就是为了简化、统一持久层各种实现技术的api。
+
+两个jar包：spring-data-commons一套标准api和
+spring-data-jpa基于整合jpa的实现
+
+为什么springdata只写接口就可以完成操作？
+
+代理就是创造某个接口的实现类。调用代理对象的时候实现的方法其实是SimpleJpaRepository的方法。
+
+##2、SpringData 查询的使用
+1. 根据方法命名规则自动生成
+	方法中啥也不写
+2. 不按命名规则，配置@Query
+	指定语句
+3. 不安命名规则写查询方法，配置@Query，但不写语句。在实体类中定义
+
+##3、SpringData 修改和删除的使用
+使用@Query，搭配@Modifying标记修改。
+
+注意：单体测试DAO，要设置事务@Transactional，并且要设置不回滚@Rollback(false)
+
+##4、数据表格datagrid的简单使用
+##5、分页原理分析
+给服务器发-当前页码，每页多少条
+服务器回复-总记录数，当前页的记录
+
+##6、收派标准分页查询
+1. action中
+	1. 属性驱动接收两个参数
+	2. 调用业务层查询总记录数（total）
+	3. 调用业务层查询当前页的数据（pageable）
+2. Service中
+	1. 调用StandardRepository的findAll方法，传入pageable
+3. dao中
+	1. 继承jparepository
+
+##7、修改功能
+需求：
+
+1. 点击修改按钮，获取datagrid选中的一行数据。
+	1. 绑定函数，函数中做判断，是否为一行。
+2. 提供隐藏域，装载id
+3. 使用load方法完成表单数据的回显
+
+注意：
+
+只要修改了父工程，就要install一下父工程。因为子模块run的时候是去仓库找。
+
+##8、快递员管理概述
+1. 快递员管理，依赖收派标准选择
+2. 快递员分页查询
+
+##9、快递员添加功能
+1. jquery easyui window
+2. jquery easyui form 客户端表单校验
+3. spring data jpa提供save方法
+
+**收派标准的列表显示 easyui-combobox**
+
+##10、添加功能的实现
+**html**
+
+1. 检验表单输入的元素，name字段是否与实体类 属性字段一致。
+2. 对快递员添加表单。设置action和method
+3. 使用easyui-form的校验功能
+4. 添加点击事件
+	1. 如果满足校验规则--->提交
+	2. 不满足--->表单中提示
+	
+**Action**
+
+1. 
