@@ -323,10 +323,35 @@ spring-data-jpa基于整合jpa的实现
 ##2、SpringData 查询的使用
 1. 根据方法命名规则自动生成
 	方法中啥也不写
+		
+		public interface StandardRepository extends JpaRepository<Standard,Integer>{
+			public List<Standard> findByName(String name);
+		}
+
 2. 不按命名规则，配置@Query
 	指定语句
-3. 不安命名规则写查询方法，配置@Query，但不写语句。在实体类中定义
 
+		public interface StandardRepository extends JpaRepository<Standard,Integer>{
+			@Query(value="from Standard where name=?",nativeQuery=false)
+			public List<Standard> queryName(String name);
+		}
+
+3. 不安命名规则写查询方法，配置@Query，但不写语句。
+	
+		//实体类中定义
+		@NamedQueries({
+			@NamedQuery(name="Standard.queryName2",query="from Standard where name=?")
+		})
+		public class Standard {
+			......
+		}
+		//在dao层定义
+		public interface StandardRepository extends JpaRepository<Standard,Integer>{
+			
+			@Query
+			public List<Standard> queryName2(String name);
+		}
+	
 ##3、SpringData 修改和删除的使用
 使用@Query，搭配@Modifying标记修改。
 
@@ -339,13 +364,140 @@ spring-data-jpa基于整合jpa的实现
 
 ##6、收派标准分页查询
 1. action中
-	1. 属性驱动接收两个参数
+	1. 属性驱动接收两个参数（page rows）
 	2. 调用业务层查询总记录数（total）
 	3. 调用业务层查询当前页的数据（pageable）
+	4. 2和3实际上不需要分开做。使用spring data封装的page就可以了，会将两个数据都包含进去
 2. Service中
 	1. 调用StandardRepository的findAll方法，传入pageable
 3. dao中
 	1. 继承jparepository
+
+>注意：
+>
+>1.在action中将数据转换成json数据要使用到struts2-json-plugin包。另外要使用“json”这个result-type，action类必须继承json-default包的。
+>
+>2.PageRequest是Pageable的实现类。在构造PageRequest对象时，要传入page-1，因为PageRequest的page页码是从0开始的。
+
+	private int page;
+		private int rows;
+	
+		public void setPage(int page) {
+			this.page = page;
+		}
+	
+		public void setRows(int rows) {
+			this.rows = rows;
+		}
+	
+	@Action(value = "standard_pageQuery", results = { @Result(name = "success", type = "json") })
+		public String query() {
+			System.out.println("query");
+			// 将接收的两个参数传递给业务层，调用业务层方法获取数据
+			// PageRequest是Pageable的实现类--->下面是多态
+			Pageable pageable = new PageRequest(page - 1, rows);
+			Page<Standard> pageData = ss.findPageData(pageable);
+			// 将数据转换成json数据，存入值栈
+			Map<String, Object> result = new HashMap<>();
+			result.put("total", pageData.getTotalElements());
+			result.put("rows", pageData.getContent());
+			ActionContext.getContext().getValueStack().push(result);
+			return SUCCESS;
+		}
+
+	//前端页面
+	// 收派标准信息表格
+	$('#grid').datagrid({
+		iconCls: 'icon-forward',
+		fit: true,
+		border: false,
+		rownumbers: true,
+		striped: true,
+		pageList: [10, 20, 50],
+		pagination: true,
+		toolbar: toolbar,
+		url: "../../standard_pageQuery",
+		idField: 'id',
+		columns: columns
+	});
+	//工具栏
+	var toolbar = [{
+		id: 'button-add',
+		text: '增加',
+		iconCls: 'icon-add',
+		handler: function() {
+			$("#standardWindow").window('open');
+		}
+	}, {
+		id: 'button-edit',
+		text: '修改',
+		iconCls: 'icon-edit',
+		handler: function() {
+			alert('修改');
+		}
+	}, {
+		id: 'button-delete',
+		text: '作废',
+		iconCls: 'icon-cancel',
+		handler: function() {
+			alert('作废');
+		}
+	}, {
+		id: 'button-restore',
+		text: '还原',
+		iconCls: 'icon-save',
+		handler: function() {
+			alert('还原');
+		}
+	}];
+	
+	// 定义列
+	var columns = [
+		[{
+			field: 'id',
+			checkbox: true
+		}, {
+			field: 'name',
+			title: '标准名称',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'minWeight',
+			title: '最小重量',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'maxWeight',
+			title: '最大重量',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'minLength',
+			title: '最小长度',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'maxLength',
+			title: '最大长度',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'operator',
+			title: '操作人',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'operatingTime',
+			title: '操作时间',
+			width: 120,
+			align: 'center'
+		}, {
+			field: 'operatingCompany',
+			title: '操作单位',
+			width: 120,
+			align: 'center'
+		}]
+	];
 
 ##7、修改功能
 需求：
@@ -355,9 +507,68 @@ spring-data-jpa基于整合jpa的实现
 2. 提供隐藏域，装载id
 3. 使用load方法完成表单数据的回显
 
-注意：
+只需要将前台页面的逻辑写好就行。修改数据保存，与新增数据走的是同一个action，都是save。而JpaRepository里面的save方法里做了判断，如果不存在此id，就新增，存在此id，就修改。
 
-只要修改了父工程，就要install一下父工程。因为子模块run的时候是去仓库找。
+>注意：
+>
+>只要修改了父工程，就要install一下父工程。因为子模块run的时候是去仓库找。
+
+	//工具栏
+	var toolbar = [{
+		id: 'button-add',
+		text: '增加',
+		iconCls: 'icon-add',
+		handler: function() {
+			$("#standardWindow").window('open');
+		}
+	}, {
+		id: 'button-edit',
+		text: '修改',
+		iconCls: 'icon-edit',
+		handler: function() {
+			//获取所有选中的记录
+			var rows = $("#grid").datagrid('getSelections');
+			//判断记录是否只有一条，如果不是-->弹出警告窗
+			if (rows.length!=1) {
+				$.messager.alert('警告','只能选择一条记录哦','warning');  
+			} else{
+				alert(JSON.stringify(rows));
+				var row = rows[0];
+				alert(JSON.stringify(row));
+				$("#standardForm").form('load',row);
+				//显示窗口
+				$("#standardWindow").window('open');
+			}
+		}
+	}
+
+>注意：在使用load方法将数据回填到表单中时，一定要加上“var row = rows[0];”这个语句将数组转化成对象。详见一下json数据对比：
+
+	//rows的json
+	[
+	    {
+	        "id": 1,
+	        "maxLength": 60,
+	        "maxWeight": 60,
+	        "minLength": 50,
+	        "minWeight": 50,
+	        "name": "50-60公斤",
+	        "operatingCompany": "一公司",
+	        "operator": "a"
+	    }
+	]
+
+	//row的json
+	{
+	    "id": 1,
+	    "maxLength": 60,
+	    "maxWeight": 60,
+	    "minLength": 50,
+	    "minWeight": 50,
+	    "name": "50-60公斤",
+	    "operatingCompany": "一公司",
+	    "operator": "a"
+	}
 
 ##8、快递员管理概述
 1. 快递员管理，依赖收派标准选择
@@ -370,6 +581,13 @@ spring-data-jpa基于整合jpa的实现
 
 **收派标准的列表显示 easyui-combobox**
 
+	<input type="text" name="standard.id" 
+	class="easyui-combobox" 
+	data-options="required:true,valueField:'id',textField:'name',
+	url:'../../standard_findAll.action'"/>
+
+只需要在url里面添加action的路径，valueField用来记录选择的是哪一个standard，textField用来作为standard各个属性的代表显示在页面上。然后在后台写好对应的方法就好。
+
 ##10、添加功能的实现
 **html**
 
@@ -379,7 +597,172 @@ spring-data-jpa基于整合jpa的实现
 4. 添加点击事件
 	1. 如果满足校验规则--->提交
 	2. 不满足--->表单中提示
-	
-**Action**
 
-1. 
+##11、无条件的分页查询
+1. datagrid在页面加载后，会自动向url地址发送一次请求。传递参数page当前页码和rows每页显示的记录条数到服务器。
+2. spring data提供pageable对象（pagerequest）接收两个参数
+3. 调用spring data中page findall（pageable）方法查询 总记录数和当前页数据
+4. 将page中的数据封装到一个自定义的map集合。将total和rows转换为json返回客户端。
+
+在查询代码编写完成后，遇到如下bug:
+
+*Caused by: org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.forest.bos.domain.base.Courier.fixedAreas, could not initialize proxy - no Session*
+
+这是因为courier中有一个集合属性
+
+	private Set<FixedArea> fixedAreas = new HashSet<FixedArea>();
+
+这个属性，hibernate不会加载*(why?因为这个属性不存在于courier的表中，它放弃了这个属性的外键维护权！*)而在序列化的时候（*当返回sucess，就会将result转换成json数据。当转换成json数据的时候，就需要查询fixedArea这个属性*），又将其序列化进去了，而此时session已经关闭，因此报错。什么时候调用get方法？
+
+解决方法：get方法上加下面的注解
+
+	@JSON(serialize=false)
+	public Set<FixedArea> getFixedAreas() {
+		return fixedAreas;
+	}
+
+##12、有条件的分页查询
+1. 制作一个查询按钮--->点击即显示查询表单
+2. 在查询窗口条件，绑定到数据表格上。让数据表格发送请求时，自动携带条件。**使用datagrid的load方法***（在原有基础上，添加新的数据）*。
+
+
+Json.Stringify()将对象转化成字符串
+
+
+
+##13、后台接收
+action类
+
+	// 编写条件
+		Specification<Courier> specification = new Specification<Courier>() {
+
+			@Override
+			public Predicate toPredicate(Root<Courier> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				/*
+				 * 参数说明 Root 用于获取属性字段， CriteriaQuery可以用于简单条件查询，
+				 * CriteriaBuilder用于构造复杂条件查询
+				 */
+				/*
+				 * courierNum:1 standard.name company type
+				 */
+				// 创建集合，接收条件
+				List<Predicate> list = new ArrayList<>();
+				// 判断表单中的那四个条件存不存在
+				if (StringUtils.isNotBlank(courier.getCourierNum())) {
+					// 员工号精确查询
+					Predicate p1 = cb.equal(root.get("courierNum").as(String.class), courier.getCourierNum());
+					list.add(p1);
+				}
+				if (StringUtils.isNotBlank(courier.getCompany())) {
+					// 公司 模糊查询
+					Predicate p2 = cb.like(root.get("company").as(String.class), courier.getCompany());
+					list.add(p2);
+				}
+				if (StringUtils.isNoneBlank(courier.getType())) {
+					// 快递员类型精确查询
+					Predicate p3 = cb.like(root.get("type").as(String.class), courier.getType());
+					list.add(p3);
+				}
+				// 多表查询需要先关联到对象
+				Join<Object, Object> standardRoot = root.join("standard", JoinType.INNER);
+				if (courier.getStandard() != null && StringUtils.isNotBlank(courier.getStandard().getName())) {
+					// 名字 模糊查询
+					Predicate p4 = cb.like(standardRoot.get("name").as(String.class), courier.getStandard().getName());
+					list.add(p4);
+				}
+				Predicate predicate = cb.and(list.toArray(new Predicate[0]));
+				return predicate;
+			}
+
+		};
+
+其中，Predicate predicate = cb.and(list.toArray(new Predicate[0]));这个语句的意思，是使上述四个条件同时满足。and方法中传入一个数组（list.toArray()集合转数组）是因为：
+
+	@Override
+	public Predicate and(Predicate... restrictions) {
+		return new CompoundPredicate( this, Predicate.BooleanOperator.AND, restrictions );
+	}
+
+这个方法的参数是可变参数，本质是数组。因此可以穿进去一个数组。而toArray方法中传一个new Predicate[0]相当于指定泛型（创建数组的几种方式，用此种方式创建数组的时候，必须要传一个长度）。
+
+继承JpaSpecificationExecutor接口
+
+#2017/8/3
+##1、快递员的批量作废 formatter的使用
+标记删除，而非真的删除（why？）
+
+Courier表中，提供delTag的字段，如果字段设值为1，则表示打上了删除的标记。
+
+而在页面上要显示已作废还是可使用。此时要使用datagrid的formatter。
+
+##2、快递员批量作废功能实现
+1. 点击页面作废按钮时，获取所有勾选快递员id
+	1. 没有选中数据--->提示必须选中一条以上的数据
+2. 实现作废的后台代码
+
+		//删除的点击事件部分代码
+		function doDelete() {
+			//获取勾选了的id
+			var rows = $("#grid").datagrid('getSelections');
+			//进行判断，如果没有勾选任何记录--->提示
+			if(rows.length == 0) {
+				//没选中数据
+				$.messager.alert('警告', '请至少选中一条记录', 'warning');
+			} else {
+				//选中数据
+				var array = new Array();
+				for(var i = 0; i < rows.length; i++) {
+					array.push(rows[i].id);
+				}
+				//将数组转换成字符串
+				var ids = array.join(",");
+				//将字符串发送服务器
+				window.location.href = "../../courier_delBatch?ids=" + ids;
+			}
+		}
+
+>这部分代码，可以注意的是js数组的使用，包括将数组转化成字符串的方法。另外，此处将参数传到后台的方式也值得学习。
+>
+>同时，当使用这种方法将id们转为一个字符串，后台接收时也需要专门进行一次切割。
+
+##3、区域批量导入原理分析
+重点在于导入，其他增删改查的功能与收派标准差不多。
+
+涉及：文件上传，excel的解析
+
+1. 如何上传批量数据表格
+	1. 必须同步提交form表单
+	2. form表单编码方式 multipart/formdata
+	3. 提交方式必须是post
+	4. 上传文件对应input type="file" 元素要提供name属性
+2. 一键上传原理
+	1. 点击按钮，触发表单中浏览文件的动作
+
+##4、jQuery ocupload实现一键上传
+1. 导入文件 jquery.ocupload-1.1.2.js
+2. 页面引入
+3. 完成上传代码
+
+##5、上传的验证
+限制后缀名
+
+##6、完成文件上传
+1. 使用struts2文件上传机制，接收上传文件。struts2-default.xml配置
+2. 实现excel的文件解析
+	1. 借助Apache的POI---专门解析微软的系列软件。
+	2. HSSF解析
+
+##7、Pinyin4j生成区域简码和城市编码
+Pinyin4j-java类库 将中文转换成英文
+
+##9、区域列表查询分页
+1. 设置查询按钮，编写弹出窗口的点击事件
+2. 对查询窗口的查询按钮添加点击事件
+
+##10、代码重构优化
+优化每次编写都要重复编写的代码，实现代码简化编写。
+
+1. 优化actioin代码，抽取BaseAction
+	1. 抽取模型驱动的代码
+
+##11、分页查询代码的重构优化
