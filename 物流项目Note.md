@@ -857,7 +857,38 @@ Pinyin4j-java类库 将中文转换成英文
 ##10、代码重构优化
 优化每次编写都要重复编写的代码，实现代码简化编写。
 
-1. 优化actioin代码，抽取BaseAction
-	1. 抽取模型驱动的代码
+优化actioin代码，抽取BaseAction。
+
+
+	//将类定义为抽象类，则不能实例化此对象
+	public abstract class BaseAction<T> extends ActionSupport implements ModelDriven<T>{
+
+		//模型驱动。此处使用protected的原因---让子类可见此属性
+		//此处不能直接new T()。因为泛型在编译的过程中会被擦除。
+		protected T model;
+		@Override
+		public T getModel() {
+			return model;
+		}
+		
+		//model实例化---定义构造方法，则子类在实例化的过程中必然调用此构造方法。即可实例化model
+		public BaseAction() {
+			//获取BaseAction<Area>
+			Type genericSuperclass = this.getClass().getGenericSuperclass();
+			
+			//获取第一个泛型参数。此处为Area类型
+			ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
+			Class<T> modelClass = (Class<T>) parameterizedType.getActualTypeArguments()[0];
+			
+			try {
+				//实例化获取的类型
+				model=modelClass.newInstance();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("模型构造失败");
+			} 
+		} 
+	}
+
 
 ##11、分页查询代码的重构优化
