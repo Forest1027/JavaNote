@@ -890,5 +890,26 @@ Pinyin4j-java类库 将中文转换成英文
 		} 
 	}
 
-
 ##11、分页查询代码的重构优化
+
+	// 分页
+	protected int page;
+	protected int rows;
+
+	public void setPage(int page) {
+		this.page = page;
+	}
+
+	public void setRows(int rows) {
+		this.rows = rows;
+	}
+
+	public void pushDataToValueStack(Page<T> page) {
+		// 将数据封装到map集合，存进值栈
+		Map<String, Object> result = new HashMap<>();
+		result.put("total", page.getTotalElements());
+		result.put("rows", page.getContent());
+		
+		ActionContext.getContext().getValueStack().push(result);
+	}
+
