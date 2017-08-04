@@ -628,8 +628,6 @@ spring-data-jpa基于整合jpa的实现
 
 Json.Stringify()将对象转化成字符串
 
-
-
 ##13、后台接收
 action类
 
@@ -743,6 +741,31 @@ Courier表中，提供delTag的字段，如果字段设值为1，则表示打上
 2. 页面引入
 3. 完成上传代码
 
+	//文件上传
+	$("#button-import").upload({
+		action:'../../area_batchImport.action',
+		//不能写在这里
+		//autoSubmit: false,
+		onSelect: function() {
+			//此语句要写在这里，而不能写在上方
+			this.autoSubmit=false;
+			//选中后，判断文件后缀名是否符合要求
+			var filename = this.filename();
+			var regex = /^.*\.(xls|xlsx)$/;
+			if(regex.test(filename)) {
+				//符合--->提交
+				this.submit();
+			}else {
+				//不符合--->警告框
+				$.messager.alert('警告','只能上传后缀名为xls或xlsx的','warning');
+			}
+		},
+		onComplete: function(response) {
+			//参数response接收后台返回的数据
+			alert("文件上传成功");
+		}
+	});
+
 ##5、上传的验证
 限制后缀名
 
@@ -751,9 +774,81 @@ Courier表中，提供delTag的字段，如果字段设值为1，则表示打上
 2. 实现excel的文件解析
 	1. 借助Apache的POI---专门解析微软的系列软件。
 	2. HSSF解析
+	
+	@Action(value = "area_batchImport")
+	public String batchImport() throws Exception {
+		// 创建集合，用于接收area对象
+		List<Area> areas = new ArrayList<>();
+		// 创建hssfworkbook对象
+		HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(file));
+		// 获取sheet
+		HSSFSheet sheet = workbook.getSheetAt(0);
+		// 遍历sheet获取rows
+		for (Row row : sheet) {
+			// 跳过首行
+			if (row.getRowNum() == 0) {
+				continue;
+			}
+			// 跳过空行
+			if (row.getCell(0) == null || StringUtils.isBlank(row.getCell(0).getStringCellValue())) {
+				continue;
+			}
+			// 从rows中取出cell，存入area对象中
+			Area area = new Area();
+			area.setId(row.getCell(0).getStringCellValue());
+			area.setProvince(row.getCell(1).getStringCellValue());
+			area.setCity(row.getCell(2).getStringCellValue());
+			area.setDistrict(row.getCell(3).getStringCellValue());
+			area.setPostcode(row.getCell(4).getStringCellValue());
+			// area对象存入集合
+			areas.add(area);
+		}
+		// 将集合传给业务层--->存数据
+		as.batchImport(areas);
+		return SUCCESS;
+	}
+
+	//业务层调用repository，直接使用save方法就好。封装了当传入集合的时候，遍历集合分别存入数据库的方法
+	@Service
+	@Transactional
+	public class AreaServiceImp implements IAreaService{
+		@Autowired
+		private AreaRepository repository;
+	
+		@Override
+		public void batchImport(List<Area> areas) {
+			repository.save(areas);
+		}
+	
+	}
 
 ##7、Pinyin4j生成区域简码和城市编码
 Pinyin4j-java类库 将中文转换成英文
+
+	// 基于pinyin4j生成简码和城市编码
+	String province = area.getProvince();
+	String city = area.getCity();
+	String district = area.getDistrict();
+
+	// 将最后一个字切掉(“省”，“市”)
+	province = province.substring(0, province.length() - 1);
+	city = city.substring(0, city.length() - 1);
+	district = district.substring(0, district.length() - 1);
+
+	//简码--省市区字符串的拼音首字母
+	String[] headArray = PinYin4jUtils.getHeadByString(province+city+district);
+	StringBuilder sb = new StringBuilder();
+	for (String head : headArray) {
+		sb.append(head);
+	}
+	String shortcode = sb.toString();
+
+	//城市编码
+	String citycode = PinYin4jUtils.hanziToPinyin(city, "");
+
+	//将简码和城市编码存入area中
+	area.setShortcode(shortcode);
+	area.setCitycode(citycode);
 
 ##9、区域列表查询分页
 1. 设置查询按钮，编写弹出窗口的点击事件
