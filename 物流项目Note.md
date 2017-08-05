@@ -913,3 +913,106 @@ Pinyin4j-java类库 将中文转换成英文
 		ActionContext.getContext().getValueStack().push(result);
 	}
 
+#2017/8/5
+##12、内容概述
+结束基础数据模块的内容
+
+1. 定区管理功能实现（重要）
+	1. 关联了基础数据模块的所有内容
+	2. 为后面的自动分单功能提供数据支撑
+2. 添加定区功能实现
+3. 定区管理客户功能实现（WebService多系统通信技术 RestService实现方式）
+4. 定区关联快递员实现
+5. 分区添加的业务逻辑
+
+##13、定区添加
+
+##14、定区列表的分页条件查询
+
+##15、定区关联客户业务分析
+重要功能
+
+业务需求：定区就是物流覆盖配送区域，快递员将为定区中所有客户进行快递业务服务。
+
+关联快递员--->排班功能<br>
+关联客户--->客户下单时，通过所在定区，分配快递员
+
+在整个物流平台系统中，客户信息不是保存在bos系统中，而是在crm系统中。
+
+因此：
+
+1. 需要一个crm系统
+2. 学习WebService，完成bos和crm的通信
+
+##16、CRM系统初始搭建
+如果都放在bos系统，则这个系统的访问压力会很大。
+
+所以采用分布式的架构。
+
+crm_domain crm后台管理系统
+
+crm_management 存放客户系统实体类，方便共享实体类，bos项目也可以引入实体。
+
+>注意：被依赖的项目（crm_domain）要install
+
+##1、WebServiceCXF简介
+WebService完成多个系统间的通信
+
+CXF是目前最主流的WebService框架
+
+##2、JAX-WS独立服务的使用
+1. 建立maven java项目
+2. 在项目中导入对应CXF jar包支持和内置的jetty服务器，log4j日志实现
+3. 编写服务端程序
+	1. 写服务接口
+	2. 写接口的实现类
+		1. @WebService
+	3. 发布服务
+		1. 创建服务实现对象
+		2. 发布服务地址
+		3. 发布服务
+4. 编写客户端程序
+	1. 调用发布webservice
+	2. 创建调用远程服务代理对象
+	3. 调用代理对象任何一个方法，都将通过网络调用web服务
+
+##3、WS原理分析与日志消息显示
+以soap协议的格式发请求和响应
+
+##4、WS与Spring的整合
+大多数时候CXF都是与spring联合使用的
+
+1. 建立一个maven的web项目
+2. 导入坐标
+	1. CXF开发：jaxws
+	2. Spring：spring-context，spring-web
+	3. test：spring-test，junit
+3. web.xml配置：
+	1. Spring：contextLoader
+4. 导入实体类、service
+5. applicationContext.xml
+	1. 引入名称空间 jaxws
+	2. 配置服务
+	3. 配置服务启动端口
+
+##5、WS与Spring整合的客户端代码
+
+##6、Restful简介
+一种风格或理念
+
+在访问服务器资源的时候，采用的不同的http协议的请求方式，服务器端可以得知进行crud的哪个操作。
+
+http请求有8种，常见有两种get post。
+get、post、put、delete、head、trance、connect、options
+
+##7、JAX-RS服务独立发布
+1. 建立maven的java项目
+2. 引入坐标
+	1. jaxrs
+	2. jetty
+	3. log4j12
+	4. json转换相关jar包
+3. 导入实体类
+	1. @XmlRootElemet-->将类转化成xml的时候，这个类到底叫什么名字？
+4. 编写业务类
+	1. 写接口
