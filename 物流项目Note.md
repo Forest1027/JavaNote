@@ -962,7 +962,7 @@ CXF是目前最主流的WebService框架
 
 ##2、JAX-WS独立服务的使用
 1. 建立maven java项目
-2. 在项目中导入对应CXF jar包支持和内置的jetty服务器，log4j日志实现
+2. 在项目中导入对应CXF-ws jar包支持和内置的jetty服务器，log4j日志实现
 3. 编写服务端程序
 	1. 写服务接口
 	2. 写接口的实现类
@@ -997,6 +997,8 @@ CXF是目前最主流的WebService框架
 
 ##5、WS与Spring整合的客户端代码
 
+ws独立使用与was和spring整合的区别在于，发布服务和客户端的编写的不同。独立服务是自己写代码，整合是配置文件。
+
 ##6、Restful简介
 一种风格或理念
 
@@ -1016,3 +1018,61 @@ get、post、put、delete、head、trance、connect、options
 	1. @XmlRootElemet-->将类转化成xml的时候，这个类到底叫什么名字？
 4. 编写业务类
 	1. 写接口
+
+可以在浏览器上面访问时在尾部加?_type=xml或者?_type=json。来指定返回值的数据形式
+
+#2017/8/6
+##8、JAX-RS客户端的使用
+有两种做法
+
+1. 使用http client了工具(Apache)，需要自己对http协议内容进行定制和解析
+2. WebClient工具类的使用
+	1. 引入rs-client的坐标
+	2. 编写客户端代码
+		1. create 建立与调用服务
+		2. 资源路径连接
+		2. type 发送给服务器数据格式 @Consumes
+		3. accept 接收服务器传输数据格式 @Produces
+
+##9、JAX-RS传输json数据的方法使用
+引入rs-extension-providers，它提供了转换json的接口。而此提供者又依赖于jettison，一个工作包。
+
+##10、JAX-RS与Spring整合
+1. 创建web项目
+	1. 导入坐标
+	2. 导入**web-inf**和配置**web.xml**
+	3. 导domain和service
+	4. applicationContext.xml 引入名称空间
+
+##11、定区关联客户CRM系统服务接口编写
+1. crm_management项目中引入cxf的jar包
+2. 在客户表添加定区编号（多的一方添加外键）
+3. 编写webservice服务接口
+	1. 查询所有未关联的客户
+	2. 基于定区编号，查询已经关联的客户
+	3. 基于客户id字符串和定区id，将客户关联到定区上
+		1. 因为客户id会有多个，所以先将其拼成字符串
+
+##12、提供服务接口的实现
+
+##13、CRM服务发布
+1. 先配置web.xml
+2. 配置applicationContext.xml
+	1. 引入名称空间
+	2. 引入applicationContext_webService.xml
+
+##14、定区关联客户窗口弹出发起ajax请求
+1. 选择（有且只有）一个定区--->弹出关联客户的窗口
+	1. 注意隐藏域赋值
+2. 弹出关联客户窗口，有遮罩窗口
+3. 弹出窗口后发ajax请求
+	1. 查询未关联定区客户列表
+	2. 查询有关联定区客户列表
+
+##15、服务器端webservice远程加载
+在bos的action中创建为关联定区列表
+
+使用webClient调用webService
+
+##1、定区关联客户功能
+
