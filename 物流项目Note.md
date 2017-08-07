@@ -355,6 +355,10 @@ spring-data-jpa基于整合jpa的实现
 ##3、SpringData 修改和删除的使用
 使用@Query，搭配@Modifying标记修改。
 
+	@Query(value="update Customer set fixedAreaId=?2 where id=?1")
+	@Modifying
+	public void updateCIdWithFAId(String id, String fixedAreaId);
+
 注意：单体测试DAO，要设置事务@Transactional，并且要设置不回滚@Rollback(false)
 
 ##4、数据表格datagrid的简单使用
@@ -1052,6 +1056,77 @@ get、post、put、delete、head、trance、connect、options
 	2. 基于定区编号，查询已经关联的客户
 	3. 基于客户id字符串和定区id，将客户关联到定区上
 		1. 因为客户id会有多个，所以先将其拼成字符串
+	
+	//接口
+	@Produces("*/*")
+	public interface ICustomerService {
+	// 查询所有未关联客户
+	@Path("/findnoassosncustomer")
+	@GET
+	@Produces({ "application/xml", "application/json" })
+	public List<Customer> findNoAssosnCustomer();
+
+	// 查询所有已关联客户
+	@Path("/findassosncustomer/{fixedareaid}")
+	@GET
+	@Produces({ "application/xml", "application/json" })
+	public List<Customer> findAssosnCustomer(@PathParam("fixedareaid") String fixedAreaId);
+
+	// 将客户(多)关联到定区(一)
+	@Path("/assosncustomertofixedarea")
+	@PUT
+	public void assosnCustomerToFixedArea(
+			@QueryParam("customerIdStr") String customerIdStr,
+			@QueryParam("fixedAreaId") String fixedAreaId);
+	}
+	//实现类
+	@Service
+	@Transactional
+	public class CustomerServiceImpl implements ICustomerService{
+		@Autowired
+		private CustomerRepository repository;
+	
+		@Override
+		public List<Customer> findNoAssosnCustomer() {
+			//fixedAreaId is null
+			return repository.findByFixedAreaIdIsNull();
+		}
+	
+		@Override
+		public List<Customer> findAssosnCustomer(String fixedAreaId) {
+			// find by fixedAreaId
+			return repository.findByFixedAreaId(fixedAreaId);
+		}
+	
+		@Override
+		public void assosnCustomerToFixedArea(String customerIdStr, String fixedAreaId) {
+			//本质是将客户的fixedareaid的值进行更新
+			//获取客户id
+			String[] ids = customerIdStr.split(",");
+			for (String idStr : ids) {
+				Integer id = Integer.parseInt(idStr);
+				repository.updateCIdWithFAId(id,fixedAreaId);
+			}
+		}
+	
+	}
+
+	//applicationContext.xml
+	<jaxrs:server id="customerService" address="/customerService">
+		<!-- 服务实现类 -->
+		<jaxrs:serviceBeans>
+			<bean class="com.forest.crm.service.impl.CustomerServiceImpl" />
+		</jaxrs:serviceBeans>
+		<!-- <jaxrs:inInterceptors>
+			<bean class="org.apache.cxf.interceptor.LoggingInInterceptor"></bean>
+		</jaxrs:inInterceptors>
+		<jaxrs:outInterceptors>
+			<bean class="org.apache.cxf.interceptor.LoggingOutInterceptor"></bean>
+		</jaxrs:outInterceptors> -->
+	</jaxrs:server>
+
+	//web.xml的配置及实体类略
+
 
 ##12、提供服务接口的实现
 

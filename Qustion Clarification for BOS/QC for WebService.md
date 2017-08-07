@@ -382,7 +382,7 @@ WS和RS的区别主要体现在实体类和服务类编写的风格不同，随�
 					</jaxrs:outInterceptors>
 				</jaxrs:server>
 			</beans>
-		2. 最终资源访问路径：服务器根目录地址+web.xml配置+applicationContext.xml address配置+类@Path+方法@Path
+		2. 最终资源访问路径：**服务器根目录地址+web.xml配置+applicationContext.xml address配置+类@Path+方法@Path**
 		
 
 3. 编写客户端程序
@@ -390,7 +390,7 @@ WS和RS的区别主要体现在实体类和服务类编写的风格不同，随�
 	2. WebClient工具类(CXF自带)
 		1. 导入依赖
 		2. 客户端代码
-			1. 注意，此时访问路径为http://localhost:9996/cxf_rs_spring/services/userService/user").type(MediaType.APPLICATION_JSON
+			1. 注意，此时访问路径为http://localhost:9996/cxf_rs_spring/services/userService/user
 
 **总结：**
 
