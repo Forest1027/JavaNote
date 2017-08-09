@@ -1140,9 +1140,36 @@ get、post、put、delete、head、trance、connect、options
 1. 选择（有且只有）一个定区--->弹出关联客户的窗口
 	1. 注意隐藏域赋值
 2. 弹出关联客户窗口，有遮罩窗口
+	1. div中设置modal属性为true
 3. 弹出窗口后发ajax请求
 	1. 查询未关联定区客户列表
 	2. 查询有关联定区客户列表
+
+			//判断选中的记录是否为一条
+			var rows = $("#grid").datagrid("getSelections");
+			if(rows.length == 1) {
+				$('#customerWindow').window('open');
+				//并且将选中的记录的地区id填入表单隐藏域中
+				$("#customerFixedAreaId").val(rows[0].id);
+				//发送ajax请求
+				$.post("../../fixedArea_findNoAssosnCustomers.action", function(data) {
+					$("#noassociationSelect").empty();
+					$(data).each(function() {
+						var option = $("<option value='"+this.id+"'>"+this.username+"("+this.address+")"+"</option>")
+						$("#noassociationSelect").append(option);
+					})
+					
+				}, "json");
+				$.post("../../fixedArea_findAssosnCustomers.action",{"id":rows[0].id},function(data) {
+					$("#associationSelect").empty();
+					$(data).each(function() {
+						var option = $("<option value='"+this.id+"'>"+this.username+"("+this.address+")"+"</option>")
+						$("#associationSelect").append(option);
+					})
+				},"json");
+			} else {
+				$.messager.alert("警告", "请选择并只能选择一条", "warning");
+			}
 
 ##15、服务器端webservice远程加载
 在bos的action中创建为关联定区列表
@@ -1151,10 +1178,42 @@ get、post、put、delete、head、trance、connect、options
 
 ##1、定区关联客户功能
 1. 实现页面中已关联和未关联客户左右移动的效果
+	
+		//关联客户，向左向右移
+		$("#toRight").click(function() {
+			$("#associationSelect").append($("#noassociationSelect option:selected"));
+		})
+		$("#toLeft").click(function() {
+			$("#noassociationSelect").append($("#associationSelect option:selected"));
+		})
+
 2. 点击关联客户的按钮提交form表单
-	1. 给需要被提交的一边设置name，另一侧不设置name。
+	1. 给需要被提交的一边设置name，另一侧不设置name(customerIds)。
+
+			<td>
+				<input type="hidden" name="id" id="customerFixedAreaId" />
+				<select id="noassociationSelect" multiple="multiple" size="10" style="width: 200px;"></select>
+			</td>
+			<td>
+				<input type="button" value="》》" id="toRight">
+				<br/>
+				<input type="button" value="《《" id="toLeft">
+			</td>
+			<td>
+				<select id="associationSelect" name="customerIds" multiple="multiple" size="10" style="width: 200px;"></select>
+			</td>
+
 	2. 为关联客户的按钮，添加click事件
 		1. 选中已关联定区客户select中选项
+		
+				//点击关联客户的按钮，提交表单
+				$("#associationBtn").click(function() {
+					//将已关联定区的所有选项选中
+					$("#associationSelect option").attr("selected","selected");
+					//提交
+					$("#customerForm").submit();
+				})
+				
 		
 解除--->在service层关联用户时，首先把该地区的所有关联解除，再将传过来的客户id的地区关联上。如此一来就实现了解除关联的操作。
 
@@ -1168,3 +1227,63 @@ get、post、put、delete、head、trance、connect、options
 ##5、收派时间列表显示
 ##6、关联快递员功能实现
 在提交关联表单的时候，要为表单的隐藏域设置选中的id
+
+#2017/8/9
+##7、分区管理业务
+快递员覆盖的区域叫做定区。分区是对定区的一个细分，分区属于自然行政区域。
+
+分区有更为具体的信息。不给分区指定定区，则分区是毫无意义的。
+
+##8、前端系统
+1. 前端系统搭建 BootStrap + AngularJS
+2. 用户注册功能实现
+3. ActiveMQ 消息队列的使用
+4. Redis实现邮件激活码保存，完成邮件绑定功能
+5. Spring Data Redis
+
+##9、前台项目导入功能分析
+
+##10、AngularJs的简介
+1. 什么是AngularJs
+	1. JS框架
+	2. 最为核心：MVVM、模块化的编程思想、自动化双向数据绑定、依赖注入、内部指令、语义化标签。
+	3. 融入了很多服务器端开发的思想
+
+##11、快速编程入门
+1. 在页面引入angular.js
+2. 双向数据绑定
+
+##12、基于模块化实现MVC案例
+MVC：是一种设计思想。Model-View-Controller。主要解决视图代码和业务代码分离。
+
+**面试**：对MVC的理解
+
+##14、Angular路由分析(页面架构)
+在页面内部通过【#/页面名称】，映射到访问正文内容页面，基于ajax方式将变化的内容加载后，显示到指定区域。
+
+##15、Angular路由使用
+1. 引入angular-route.min.js
+2. 编写页面布局，将AngularJS加载变化部分
+3. 编写Angular的路由配置
+
+##17、用户注册功能
+1. 点击获取验证码--->60秒倒计时
+	1. 页面导入angular，在div应用模块和控制器
+	2. 获取验证码绑定点击事件
+
+##1、发短信功能的实现
+吉信通——第三方短信平台
+
+1. 业务咨询，套磁送条数试用
+2. 查看接口服务
+	1. http
+	2. WebService
+3. 下载对应实例
+	1. java实例
+
+##2、服务器发送短信的功能
+0. 检查web.xml的Struts2过滤器是否配置
+1. pom.xml引入crm_domain的支持
+
+##4、注册功能的实现
+使用webService去连接crm系统
