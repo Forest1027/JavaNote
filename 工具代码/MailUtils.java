@@ -1,4 +1,4 @@
-package com.forest.bosfore.web.utils;
+﻿package com.forest.bosfore.web.utils;
 
 import java.util.Properties;
 
@@ -11,9 +11,9 @@ import javax.mail.internet.MimeMessage.RecipientType;
 
 public class MailUtils {
 	private static String smtp_host = "smtp.163.com";
-	private static String username = "itcast_search@163.com";
-	private static String password = "itcast123";
-	private static String from = "itcast_search@163.com";
+	private static String username = "kiwilettuce@163.com";
+	private static String password = "6666";
+	private static String from = "kiwilettuce@163.com";
 	private static String activeUrl = "";
 
 	public static void sendMail(String subject, String content, String to,
