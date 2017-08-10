@@ -1011,6 +1011,11 @@ ws独立使用与was和spring整合的区别在于，发布服务和客户端的
 http请求有8种，常见有两种get post。
 get、post、put、delete、head、trance、connect、options
 
+POST--保存
+PUT--修改
+GET--查询
+DELETE--删除
+
 ##7、JAX-RS服务独立发布
 1. 建立maven的java项目
 2. 引入坐标
@@ -1287,3 +1292,81 @@ MVC：是一种设计思想。Model-View-Controller。主要解决视图代码�
 
 ##4、注册功能的实现
 使用webService去连接crm系统
+
+#2017/8/10
+##5、邮箱绑定功能
+1. 用户注册时，输入邮件
+2. javamail技术，向用户邮箱发送一封激活邮件，含激活码
+3. 用户在24小时内可以点击激活---Redis
+
+1. 发送邮件
+	1. 导入MaiUtils工具类和依赖
+	2. 配置发送邮件相关参数
+	3. 编辑发送邮件正文
+
+##6、邮件激活码的保存---Redis
+1. redis的下载安装
+
+redis应用场景--游戏排行榜
+
+##7、redis的图形界面工具---jedis
+java程序操纵redis，使用jedis
+
+##8、SpringDataRedis的使用
+1. 引入pom.xml的坐标
+2. applicationContext.xml中配置redis template
+
+##9、客户注册时，发送绑定邮件，将激活码保存到redis
+
+##10、客户注册后邮箱绑定的激活功能
+1. customerAction提供activeMail方法
+2. 先判断激活码是否有效
+3. 如果有效，将用户的邮箱绑定状态进行修改
+4. 要进行判断，用户是否绑定过邮箱
+
+##11、ActiveMQ消息队列
+防止拥堵，解决大批量并发访问的问题
+
+作用：
+1. 解决服务之间的耦合
+2. 使用消息队列，增加系统并发处理量
+
+##12、ActiveMQ的安装与使用
+ActiveMQ使用的是标准生产者 和消费者模型
+
+有两种数据结构 Queue、Topic
+
+1. Queue队列，生产者生产了一个消息，只能由一个消费者进行消费
+2. Topic话题，生产者生产了一个消息，可以由多个消费者进行使用
+
+##13、使用java程序操作ActiveMQ 生产者
+1. 导入依赖 activemq-all
+2. 编写MQ消息生产者
+	1. 创建连接工厂
+	2. 获取连接
+	3. 建立会话
+	4. 创建队列/话题对象
+	5. 创建生产者/消费者
+	6. 发送消息
+	7. 提交操作
+
+##14、使用java程序操作ActiveMQ 消费者
+1. 创建连接工厂
+2. 获取连接
+3. 开启连接
+3. 建立会话
+	1. 第一个参数：是否使用事务，如果设置true--->操作队列后，必须使用session.commit()
+4. 创建队列/话题对象
+5. 创建生产者/消费者
+6. 发送消息
+7. 提交操作
+
+##1、ActiveMQ整合Spring实现生产者
+1. 导入依赖
+	1. springcontext，springtest，junit
+	2. activemq-all
+	3. spring-jms spring整合activemq
+2. 编写生产者
+
+##2、ActiveMQ整合Spring实现消费者
+topic有有效期，过了则无法获取到
