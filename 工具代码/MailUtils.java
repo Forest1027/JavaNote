@@ -40,7 +40,4 @@ public class MailUtils {
 		}
 	}
 
-	public static void main(String[] args) {
-		sendMail("测试邮件", "你好，传智播客", "itcast_search@163.com", "98765");
-	}
 }
