@@ -1370,3 +1370,106 @@ ActiveMQ使用的是标准生产者 和消费者模型
 
 ##2、ActiveMQ整合Spring实现消费者
 topic有有效期，过了则无法获取到
+
+#2017/8/11
+##3、重构客户注册基于MQ实现短信验证码生产者
+Qustions：
+为什么使用queue和topic都可以？？？
+
+1. bos_fore客户注册action作为生产者
+	1. 引入applicationContext_mq.xml,修改配置
+	2. 不直接使用smsutils，使用template发送
+	3. 使用mapMassage，将电话号码也存进去
+	4. 缺少xbean的jar包
+	5. 常见错误：配置文件中bean的id定义重名（cannot convert value of...to...）
+
+##4、重构客户注册基于MQ实现短信验证码消费者
+Q:
+消费者中不用回显数据之类的吗？？
+
+1. 新建项目
+	1. 配置tomcat的端口
+	2. 配置web.xml
+	3. 配置applicationContext.xml
+2. 消费者实现MessageLitener接口
+	1. mapmessage取出电话号码
+	2. 发送短信
+	3. 判断是否发送成功
+
+##5、促销、取派功能概述
+##6、促销活动分析与数据表建立
+促销的实时更新。
+
+前台bos_fore展示
+
+后台bos_management管理活动信息crud
+
+1. 实现促销活动信息自定义录入---在线html编辑器技术（用于论坛、商品详情、活动详情、新闻内容）
+2. 导入取派活动的实体类
+
+##7、kindeditor使用入门
+在线html编辑器
+
+在webapp下建立editor文件夹
+
+1. 引入文件
+2. 根据官方文档粘贴代码
+
+##8、kindeditor的初始化参数配置
+1. items--按钮定制
+2. 图片上传编辑预览-uploadJson、fileUploadJson
+3. allowfilemanager
+
+##9、kindeditor自定义图片上传
+默认是php实现，如果要使用java，则需要设置初始化参数
+
+查看文件上传返回参数
+写一个action
+
+##10、kindeditor图片上传效果显示
+```
+@Action(value = "image_upload", results = { @Result(name = "success", type = "json") })
+	public String upload() throws IOException {
+		System.out.println("文件：" + imgFile);
+		System.out.println("文件名：" + imgFileFileName);
+		System.out.println("文件类型：" + imgFileContentType);
+		// 生成保存路径/显示路径
+		String savePath = ServletActionContext.getServletContext().getRealPath("/upload/");
+		String saveUrl = ServletActionContext.getRequest().getContextPath() + "/upload/";
+		String saveUrl2 = ServletActionContext.getServletContext().getContextPath() + "/upload/";
+		System.out.println("realpath--" + savePath);
+		System.out.println("request contextPath--" + saveUrl);
+		System.out.println("servletcontext contextPath--" + saveUrl2);
+		// 生成随机的文件名/后缀名
+		UUID uuid = UUID.randomUUID();
+		String type = imgFileFileName.substring(imgFileFileName.lastIndexOf("."));
+		String randomFileName = uuid + type;
+		// 保存文件
+		FileUtils.copyFile(imgFile, new File(savePath + "/" + randomFileName));
+		// 通知浏览器文件上传成功
+		Map<String, Object> result = new HashMap<>();
+		result.put("error", 0);
+		result.put("url", saveUrl + randomFileName);
+		ActionContext.getContext().getValueStack().push(result);
+		return SUCCESS;
+	}
+```
+
+上述代码中的文件，文件名，文件类型要遵循一定的规范编写，不然获取不到数据。
+
+imgFile，imgFile**FileName**，imgFile**ContentType**
+
+##11、kindeditor图片管理器功能实现
+点击“图片空间”-->显示所有已经已经上传的图片列表
+
+点击“图片空间”-->向image_manage.action发送请求
+
+##12、保存功能实现
+##13、富文本提交问题
+kindeditor的工作原理：创建一个iframe，将原来的textarea隐藏起来
+
+##14、宣传活动后台分页显示
+##1、BootStrap分页表格demo编写
+datagrid的分页效果太丑，前台页面是要给客户看的，因此要用bootstrap写。
+
+##2、angular实现分页
