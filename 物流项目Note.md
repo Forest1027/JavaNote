@@ -1473,3 +1473,22 @@ kindeditor的工作原理：创建一个iframe，将原来的textarea隐藏起�
 datagrid的分页效果太丑，前台页面是要给客户看的，因此要用bootstrap写。
 
 ##2、angular实现分页
+
+#8/13/2017 9:04:18 AM 
+##3、活动分页实现
+共享实体，抽取bos_domain项目
+
+##4、活动分页后台实现
+pagebean的抽取
+
+##6、宣传活动详情页面展示
+静态页面化技术-FreeMarcker
+
+##7、Freemarker模板引擎入门
+##8、宣传活动详情显示
+##9、宣传活动自动过期
+quartz
+
+job-scheduling framework
+企业级任务调度框架
+
