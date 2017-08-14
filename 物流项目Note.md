@@ -1492,3 +1492,43 @@ quartz
 job-scheduling framework
 企业级任务调度框架
 
+##quartz和spring整合Bean无法注入问题解决
+
+	//运行代码：
+	public class HelloJob implements Job{
+		@Autowired
+		private JobService js;
+	
+		public void execute(JobExecutionContext context) throws JobExecutionException {
+			// TODO Auto-generated method stub
+			js.helloJob();
+		}
+	
+	}
+
+	//配置文件
+	<context:component-scan base-package="com.forest.service"/>
+	<!-- job -->
+	<bean id="helloJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass" value="com.forest.job.HelloJob"></property>
+	</bean>
+	<!-- trigger -->
+	<bean id="simpleTrigger"
+		class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="helloJob"></property>
+		<property name="startDelay" value="3000"></property>
+		<property name="repeatInterval" value="5000"></property>
+	</bean>
+	<!-- schedule -->
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="simpleTrigger"></ref>
+			</list>
+		</property>
+	</bean>
+
+js无法注入，原因在于，@Autowired的使用前提是被注入的一方与注入的对象均需处于spring的管理之中。而HelloJob并没有处于Spring的管理之中。
+
+详情可见applicationContext.xml文件中关于HelloJob的配置，JobDetailFactoryBean中只是设置HelloJob的字节码对象为其属性值，并没有创建其对象-->因此Spring并不具备创建HelloJob对象的能力--->注入失败？？？？？？
