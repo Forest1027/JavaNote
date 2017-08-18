@@ -7,6 +7,18 @@
 > * 使用的技术点
 > * 技术点详解
 
+模板
+##模块名
+### 主要功能
+* 主要功能
+### 业务逻辑
+#### 用此标题，将主要功能逐条对应扩充 *if neccessary*
+* 主要功能
+> 注意点。。。
+**技术点**
+
+
+
 ## 宣传活动模块
 
 ### 主要功能
@@ -74,5 +86,56 @@
 > * 在WebService中需要返回带有泛型的集合，如PageBean中有一个属性为 private List<T> pageData，此时需要在类上加上注解:@XmlSeeAlso({Promotion.class})
 
 * 展示活动详情
-	* 
+	* 前端页面
+		* 让查看详情的超链接值携带该活动的id
+		* index页面的路由的条件链接上在参数值前面加上“:”则可以接收这个id
+		* 将接收到的参数携带到访问action的链接上
+	* 后台逻辑
+		*  接收id，并创建包含此id的特定文件路径
+		*  判断这个文件路径是否存在
+			*  存在-->将此文件的内容用输出流打印到页面
+			*  不存在-->
+				*  从bos_management中查询出此活动
+				*  利用Freemarker静态页面生成技术，结合模板和查询到的数据，生成此文件
+				*  将此文件的内容用输出流打印到页面
+
+**技术点**
+
+* AngularJs路由$routeParam的使用
+* FreeMarker
+	* 是什么？
+		* 一种静态页面化技术
+			* 服务器将根据id查询到的数据动态生成一个html页面
+			* 下次再查询相同数据的时候，直接将此页面返回
+			* 此举有利于减少与数据库的交互，提高查询效率
+		* 原理
+			* 模板+Java数据对象-->输出任意格式文本，html/jsp...
+			* 后缀名通常为ftl
+	* 怎么用？
+		* jar包-导入struts2的时候自动导了
+		* 插件-freemarker_eclipseplugin复制到elipse的dropins文件夹下
+		* 编辑模板-放在WEB-INF/classes下
+		* 变量声明格式-${变量}
+		* 编写代码-获取数据、模板，并将两者整合到一起输出文件
 #### 宣传活动定时过期功能实现
+### 主要功能
+* 当宣传活动的期限过了之后，自动将状态改为“过期”
+
+### 业务逻辑
+> 主要做的是，利用Quartz框架，每分钟(时间自定义)调用一次update方法，将当前时间大于“结束日期”并且状态仍为“进行中”的记录的状态改为“已过期”
+
+* 导入依赖
+	* quarts
+	* quarts-jobs
+* 编写Job和JobFactory
+	* Quartz与Spring整合时，Job中由Spring管理的bean无法注入
+	* 因此专门编写一个JobFactory(需要在schedule中配置)，将Job也置于Spring的管理中
+* 编写Service/Dao进行update操作
+* 配置applicationContext.xml
+
+**技术点**
+
+* Quartz
+	* Job：工作任务，你要做什么，Job一般自定义实现，由接口JobDetail来创建
+	* Trigger执行工作任务，什么时间执行，多久执行一次;常用的有：SimpleTrigger、CronTrigger
+	* Scheduler定时器对象，开启定时任务
