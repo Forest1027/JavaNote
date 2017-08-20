@@ -20,7 +20,7 @@
 
 
 
-## 宣传活动模块
+## 6、宣传活动模块
 
 ### 主要功能
 * 后台(bos_management)管理宣传活动
@@ -140,3 +140,40 @@
 	* Job：工作任务，你要做什么，Job一般自定义实现，由接口JobDetail来创建
 	* Trigger执行工作任务，什么时间执行，多久执行一次;常用的有：SimpleTrigger、CronTrigger
 	* Scheduler定时器对象，开启定时任务
+
+## 7、登录下单、工单管理
+### 主要功能
+* 用户登录
+* 用户下单功能
+	* 用户下单后表单提交
+	* 用户系统自动分配快递员
+	* 生成工单
+
+### 业务逻辑
+#### 用户登录
+* 前端页面设置form、action、method及name
+* bos_fore新增login方法
+	* 用webService向crm_management请求数据，携带电话号及密码
+	* crm_management新增服务接口，功能为根据telephone和password查询客户，并将此数据返回bos_fore
+	* 如果customer对象为空，则登录失败-->返回login页面；如果customer对象不为空，则登录成功-->将customer对象存进session
+
+#### 用户下单功能
+* 用户下单后表单提交
+	* 前端
+		* citypicker实现省市三级联动
+		* 填写地址自动补全
+	* 后台
+
+**技术点**
+
+1. citypicker
+	1. 拷贝压缩包中的部分内容到工程目录下
+	2. 在页面引入city-picker,city-picker-data等文件
+	3. 在需要实现省市三级联动的标签加data-toggle="city-picker"或$("#area").citypicker()js调用
+
+
+* 用户系统自动分配快递员
+* 生成工单
+
+> 注意点。。。
+
