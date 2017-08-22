@@ -18,7 +18,63 @@
 > 注意点。。。
 **技术点**
 
+## 1、项目搭建
+### 主要功能
+* 确认开发工具
+* 综述整个项目用到的技术
+* 后台界面解决方案--EasyUI；树形菜单--ZeeTree
 
+## 2、基础模块-取派管理
+### 主要功能
+* 基础数据表搭建
+* 收派标准的CRUD
+* 快递员的CRUD
+
+### 业务逻辑
+* 收派标准的CRUD
+	* 增加：
+		* validatebox的使用
+	* 删除：
+	* 修改：
+		* 表单回显
+			* $("#id").form('load',数据来源)
+			* 提供隐藏域装载id
+	* 查询：
+		* 分页查询
+			* 【Action】有条件查询时，使用Specification接口.并将其连同pageable传到service
+			* 【Dao】Dao层继承JpaSpecificationExecutor<T>
+* 快递员的CRUD
+	* 增、改、查同收派标准
+	* 删除
+		* 实际为改，将detag改为1
+		* 【页面】使用datagrid的formatter，进行逻辑判断，选择显示的内容
+		* datagrid的getSelections方法
+
+## 3、区域设置
+### 主要功能
+* 批量上传
+* 分页查询
+
+### 业务逻辑
+* 批量上传
+	* 【前端】一键上传
+		* jQuery ocupload-->隐藏文件上传的传统页面、给“选择文件”的内容绑定onchange时间
+		* 拷贝文件到工程中，页面引用
+	* 【前端】判断后缀
+		* 取消自动提交表单
+		* 使用正则表达式，判断扩展名是否为excel会有的
+	* 【后台】使用Apache POI解析excel
+		* 导包
+		* excel book--sheet--row--cell
+	* 【后台】Pinyin4j实现拼音简码的自动生成
+		* 导入jar包
+		* 使用写好的pinyinUtils
+* 分页查询
+* 代码优化
+	* 抽取BaseAction
+		* model
+		* page/row
+**技术点**
 
 ## 6、宣传活动模块
 
