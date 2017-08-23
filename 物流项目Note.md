@@ -1593,8 +1593,12 @@ Chapter8 Part1
 	2. 运单快速录入数据回显
 3. 运单录入保存功能
 
-#8/20/2017 9:06:02 AM 
+#8/23/2017 2:46:13 PM 
 Chapter8 Part2
+Chpater9 Part1
 
 **要做的功能**
-
+1. Chpater8
+	1. 运单管理的查询功能-与springdata elasticsearch整合
+2. Chapter9	
+	1. 登录权限功能实现
