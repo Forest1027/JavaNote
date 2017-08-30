@@ -1,0 +1,23 @@
+// 读取 jrxml 文件
+		String jrxml = ServletActionContext.getServletContext().getRealPath("/jasper/bos_report.jrxml");
+		// 准备需要数据
+		Map<String, Object> parameters = new HashMap<String, Object>();
+		parameters.put("company", "S$P");
+		// 准备需要数据
+		JasperReport report = JasperCompileManager.compileReport(jrxml);
+		JasperPrint jasperPrint = JasperFillManager.fillReport(report, parameters, dataSource.getConnection());
+
+		HttpServletResponse response = ServletActionContext.getResponse();
+		OutputStream ouputStream = response.getOutputStream();
+		// 设置相应参数，以附件形式保存PDF
+		response.setContentType("application/pdf");
+		response.setCharacterEncoding("UTF-8");
+		response.setHeader("Content-Disposition", "attachment; filename=" + FileUtils.encodeDownloadFilename("工作单.pdf",
+				ServletActionContext.getRequest().getHeader("user-agent")));
+		// 使用JRPdfExproter导出器导出pdf
+		JRPdfExporter exporter = new JRPdfExporter();
+		exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+		exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, ouputStream);
+		exporter.exportReport();// 导出
+		ouputStream.close();// 关闭流
+		return null;
