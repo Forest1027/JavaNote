@@ -1,0 +1,52 @@
+# MyBatis
+## Day1
+1. JDBC需要优化的地方
+	1. 每次查询都创建连接--浪费资源-->连接池
+	2. 硬编码--一旦要做修改，就要重新打包、发布-->提取代码
+		1. 换成其他数据库不方便
+		2. sql语句的变换
+		3. 设置参数的方法
+		4. 从resultset中一个一个取字段很麻烦--使用POJO对象封装
+2. MyBatis如何解决上述问题
+	1. MayBatis架构
+		1. 配置文件
+		2. SqlSessionFactory 
+		3. SqlSession-提供用户方法
+		4. Executor-实际干活的，执行sql语句
+		5. MappedStatement-封装了sql语句
+	2. 如何解决
+		1. 支持连接池
+		2. sql语句放在配置文件中
+		3. 输入映射-放参数
+		4. 输出映射-返回对象
+3. MyBatis入门
+	1. github上下载
+	2. 搭建环境
+		1. config文件？classpath？
+		2. POJO类
+		3. SqlMapConfig配置文件、Mapper文件
+	3. 测试代码（5种需求）
+		1. 根据id查询
+		2. 根据姓名模糊查询
+		3. 添加用户
+			1. 设置配置文件，将mysql的自增id返回
+		4. 删除用户
+		5. 修改用户
+4. MyBatis与Hibernate的对比
+	1. MyBatis解决JDBC的问题
+		1. 自带连接池
+		2. sql语句提取到map文件中
+		3. 参数映射-POJO
+		4. 返回值-POJO/POJO List
+	2. MyBatis与Hibernate不同
+		1. MyBatis不是完全的orm框架
+			1. MyBatis必须写sql语句
+			2. MyBatis灵活性强(多用于互联网项目)，Hibernate开发效率高(熟悉了之后。hibernate用在保险、银行等传统项目)
+5. Dao开发方式
+	1. 原始Dao开发方法
+	2. mapper代理
+		1. 为什么使用mapper?
+6. sqlMapConfig的配置
+	1. properties 属性
+	2. typeAliases 别名
+	3. mappers 映射器
