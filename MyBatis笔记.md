@@ -50,3 +50,13 @@
 	1. properties 属性
 	2. typeAliases 别名
 	3. mappers 映射器
+
+# Day2
+1. parameterType
+	1. 简单类型
+	2. pojo类型
+	3. pojo包装对象
+2. resultType
+	1. 输出简单类型
+	2. 输出pojo对象
+	3. 输出pojo列表
