@@ -56,7 +56,10 @@
 	1. 简单类型
 	2. pojo类型
 	3. pojo包装对象
+		1. 将pojo进一步包装
 2. resultType
 	1. 输出简单类型
 	2. 输出pojo对象
 	3. 输出pojo列表
+3. resultMap
+4. 动态sql
