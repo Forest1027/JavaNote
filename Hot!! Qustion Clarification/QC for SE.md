@@ -211,6 +211,19 @@
 * [死锁产生原因及解决办法](http://blog.csdn.net/ls5718/article/details/51896159)
 
 # IO流
+**nio**
+
+1. 诞生的原因
+	1. 【面向流的处理】传统输入输出流底层实现是通过*字节的移动*，因此效率不高
+	2. 【面向块的处理】nio（新io）采用*内存映射文件*的方式来处理
+2. 原理
+	1. Channel与Buffer是新io中的两个核心对象
+		1. Channel:对传统IO的模拟。但它提供map()方法，此方法可以将“一块数据”映射到内存
+		2. Buffer:一个容器，Channel读取、写出数据都必须先经过Buffer
+3. NIO.2
+	1. Java7对NIO进行了重大改造
+		1. 提供了全面的文件IO和文件系统访问支持：新增java.nio.file包及其子包
+		2. 基于异步Channel的IO：java.nio.channels包下新增多个以Asynchronous开头的Channel接口和类
 
 # 反向代理
 # 动态代理
