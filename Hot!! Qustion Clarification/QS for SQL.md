@@ -45,6 +45,18 @@ oracle分页（rownum）和mysql分页（limit）的区别
 			2. 存储函数可以在select语句中直接使用；存储过程不能在select中使用，多数被应用程序调用
 			3. 存储函数一般是封装一个查询结果；存储过程一般封装一段事务代码
 
-sql语句优化（说出8条）
+## MySQL
+
+## MySQL语句优化（说出8条）
+1. not exists代替not in
+	1. 如果查询语句使用了not in，那么对内外表都进行全表扫描，没有用到索引；而not exists的子查询依然能用到已经建好的表上的索引。
+2. 尽量不采用不利用索引的操作符
+	1. 如in，not in，is null，is not null等
+	2. 给经常做搜索的字段建立索引
+3. 使用limit
+	1. 已知返回结果有多少条（少量）的时候，加一个limit可以提高性能，因为查到这么多条就不查了
+	1. select * from table LIMIT 5,10; #返回第6-15行数据
+	2. select * from table LIMIT 5; #返回前5行
+	3. select * from table LIMIT 0,5; #返回前5行
 where和having的区别
 
