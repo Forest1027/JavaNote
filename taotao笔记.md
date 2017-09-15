@@ -18,7 +18,7 @@ tomcat的并发量撑死400多个。
 ## 高并发的解决
 >Tomcat集群是什么样的集群？
 >设置session共享。其中一个tomcat的session改了，就要发送session信息，让别的也进行更改。因此tomcat集群超过5个，容易形成内网风暴（只能传session，处理不了逻辑了）
->使用nginx，并发量最高支持两万，一般算一万
+>使用nginx，并发量最高支持两万，一般算一万。并发量超过500，就是用nginx
 
 软件无能为力，就考虑硬件：
 f5负载均衡服务器。并发量4-5万
@@ -32,7 +32,7 @@ DNS服务器。从区域上就分开，不同地区访问不同服务器
 分布-运行的代码不同
 集群-运行的代码相同
 
-子系统间的通信 dubbo，hison，CXF Webservice
+子系统间的通信 dubbo，hessian，CXF Webservice
 
 高可用也是搭建集群来解决
 
@@ -45,3 +45,25 @@ pojo,dao,interface单独达成jar包的目的：方便别人使用，直接依�
 依赖管理：定义要使用jar包的版本
 依赖：具体要使用的jar包
 先进行管理，再进行导包
+
+# Day2
+1. 练习linux命令
+2. dubbo
+	1. 为什么使用dubbo
+		1. 基于rpc协议（远程调用协议），使用socket通信。**可以统计出系统之间的调用关系和调用次数。**【可以观察出哪里需要搭建集群】/*dubbox是当当在dubbo上进行二次开发后*/
+	2. 什么是dubbo
+		1. alibaba旗下开源的项目
+		2. 理解dubbo的四个角色
+		3. 是同步通讯技术
+	3. 如何使用dubbo
+
+soa：面向服务的架构
+服务：有一定业务逻辑，可被别人调用的接口
+
+Webservice基于soap协议，传送的xml，因此效率不高。技术古老。通常是天气预报会用。
+替代：使用RestFul风格的服务，http+json。一般对外提供接口
+
+socket和package
+ejb开发 重量级开发，古老，没人用了
+
+ThreadLocal 保证线程安全。每一个线程都有一个treadlocal
