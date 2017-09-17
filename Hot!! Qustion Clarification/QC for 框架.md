@@ -44,6 +44,7 @@
 4. Spring中常用的注解
 4. 优点
 
+Spring和SpringMVC是父子容器的关系。子容器更为强大。理论上，配置SpringMVC的配置文件就好了，但是为了好维护、方便扩展，我们还是会用到Spring的配置文件，而且拆成了dao、service等。
 
 ## MyBatis
 1. 是什么？
