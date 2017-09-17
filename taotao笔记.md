@@ -67,3 +67,27 @@ socket和package
 ejb开发 重量级开发，古老，没人用了
 
 ThreadLocal 保证线程安全。每一个线程都有一个treadlocal
+
+## Day3
+软件即服务
+
+常见的异常解决办法
+1. 启动前要确保所有项目都安装过
+2. manager和web先启动谁无所谓，不会报错
+3. 所有用来传输的数据都要事先serilizable接口
+	1. dubbo是以二进制传输的，因此效率很高
+4. 资源拷贝问题
+	1. src文件夹下默认只编译java文件，
+
+要启动监控中心，必须先启动zookeeper
+
+log4j和监控中心一定要加上，方便自己调错
+
+js中定义一个变量a，如果为null，undefined，0，false，""的时候，if(a){},a相当于false，除此之外，都相当于true
+
+$("<div>")创建一个div
+
+### FastDFS
+分布式文件系统。线性扩容
+
+FastDFS由两部分组成，其中tracker负责计算，storage负责存储
