@@ -37,3 +37,36 @@
 1. 什么是Zookeeper？有什么用？
 
 ## FastDFS
+分布式文件服务器
+
+分为Tracker和Storage。
+
+线性扩容功能，我们需要往FastDFS上面挂载Storage，实时报告storage的状态，然后tracker可以计算，并且根据情况进行自动扩容。
+
+## KindEditor
+使用步骤：
+1. 在jsp中引入KindEditor的css和js代码。
+```
+<script type="text/javascript" charset="utf-8" src="/js/kindeditor-4.1.10/kindeditor-all-min.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/kindeditor-4.1.10/lang/zh_CN.js"></script>
+```
+2. 在表单中添加一个textarea控件。是一个富文本编辑器的载体。类似数据源
+```
+<td>商品描述:</td>
+<td>
+    <textarea style="width:800px;height:300px;visibility:hidden;" name="desc"></textarea>
+</td>
+```
+3. js中初始化富文本编辑器。使用官方提供的方法初始化
+```
+//创建富文本编辑器
+itemAddEditor = TAOTAO.createEditor("#itemAddForm [name=desc]");
+
+createEditor : function(select){
+	return KindEditor.create(select, TT.kingEditorParams);
+},
+```
+4. 取富文本编辑器的内容。表单提交之前，把富文本编辑器的内容同步到textarea控件中
+```
+itemAddEditor.sync();
+```
