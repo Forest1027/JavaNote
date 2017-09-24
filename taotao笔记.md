@@ -150,7 +150,7 @@ aof bgrewriteaof命令-删除aof中冗余命令行
 ## Day6
 为什么要在spring中配置solrserver？--在程序运行期间保证只有一个solrserver。因为不断获取连接很消耗资源
 
-为什么搭建zookeeper的集群？--保证zookeeper的高可用，solr集群基于zookeeper。所有solr服务器都使用zookeeper管理的配置文件。zookeeper充当solr集群的入口，由zookeeper计算访问哪一个服务器【负载均衡】。因此，我们搭建了zookeeper集群来保证zookeeper的高可用。
+为什么搭建zookeeper的集群？--保证zookeeper的高可用，solr集群基于zookeeper。所有solr服务器都使用zookeeper管理的**配置文件**。zookeeper充当solr集群的入口，由zookeeper计算访问哪一个服务器【**负载均衡**】。因此，我们搭建了zookeeper集群来保证zookeeper的高可用。
 
 1. 搜索功能完成
 	1. service
@@ -159,4 +159,26 @@ aof bgrewriteaof命令-删除aof中冗余命令行
 2. solrcloud
 	1. solr提供的的分布式搜索方案。基于zookeeper
 	2. 搭建solr集群
-3. 全局处理异常
+3. 全局异常处理
+
+一个完整的索引库分成多个分片。所有分片集合起来，才是一个完整的索引库。
+zookeeper的作用：1.统一管理配置文件；2.负载均衡，是solr集群的入口
+
+## Day7
+为什么要使用ActiveMQ？
+	
+	为了使程序中与主逻辑无关的逻辑不影响主逻辑的运行。为了解耦，为了业务拆分明确。
+
+ActiveMQ与dubbo的区别？
+	
+	dubbo是同步请求服务，ActiveMQ是一部服务。dubbo可以集群，ActiveMQ一般来说是没有集群的。
+
+	需要实时调用服务，需要得到结果的时候用dubbo；用dubbo时，每件事都是必须完成的。开线程的时候，不需要结果的时候用ActiveMQ。
+
+ActiveMQ发送消息却丢失了，怎么办？
+信息丢失肯定会有，但是情况不多。
+
+RabbitMQ有重发机制，连发5次没成功，就把这个错误放到错误池里。
+
+ActiveMQ小巧、方便，RabbitMQ重量级。
+
