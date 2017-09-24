@@ -101,3 +101,62 @@ FastDFS由两部分组成，其中tracker负责计算，storage负责存储
 SEO 搜索引擎优化。搜索引擎喜欢静态资源，所以提供伪静态化方案
 
 瀑布流——鼠标滚动，出发事件，引发ajax发送异步请求
+
+## Day5
+一般来说最后开发首页。
+
+**redis**
+
+NoSQL数据库，内存数据库。将所有数据放在内存中。Key-Value格式
+优点：读写速度快。
+缺点：内存大小限制；占内存。
+
+缓存同步:一般来说开发中要保证数据唯一性。即，只有一份数据起作用。但是缓存机制，是不符合这个原则的。因此我们要保证缓存中的数据与数据库中的数据要一样，于是就有了缓存同步。
+
+加缓存的目的，仅仅是为了提高用户体验。**所有优化操作，不能影响业务逻辑的运行。**
+
+什么是分布式事务？dubbo、webservice、hissian的区别?
+是否用过图片服务器？
+
+项目经理：良好的沟通，完善的逻辑思维
+
+只要对查询速度有要求，就可以用缓存。
+
+Redis不适合保存内容大的数据，是单线程的。
+
+Redis的五种基本数据类型。都是以key-value形式做基础，存的所有数据都是字符串
+1. String
+	1. **get、set**。命令不区分大小写。**incr加一、decr减一**命令
+	2. key、value区分大小写
+2. Hash
+	1. 相当于一个key对一个map
+	2. **hset、hget**，向hash中设值取值；hincrby
+3. List 有顺序可重复
+	1. lpush：从左添加；rpush：从右添加
+	2. lrange 查看；lpop 从左弹出；rpop 从右弹出
+4. Set 元素无顺序，不重复
+	1. sadd、smembers srem
+5. SortedSet 有顺序不重复
+	1. 做排行榜
+
+是否有事务问题？考虑业务逻辑是否需要具有原子性（一个整体，全部成功或全部失败）
+
+redis的事务做的不是特别好，只提供了watch。只是在有改动的时候，进行提示。
+
+redis的持久化
+rdb 快照
+aof bgrewriteaof命令-删除aof中冗余命令行
+
+## Day6
+为什么要在spring中配置solrserver？--在程序运行期间保证只有一个solrserver。因为不断获取连接很消耗资源
+
+为什么搭建zookeeper的集群？--保证zookeeper的高可用，solr集群基于zookeeper。所有solr服务器都使用zookeeper管理的配置文件。zookeeper充当solr集群的入口，由zookeeper计算访问哪一个服务器【负载均衡】。因此，我们搭建了zookeeper集群来保证zookeeper的高可用。
+
+1. 搜索功能完成
+	1. service
+	2. controller
+	3. 图片展示
+2. solrcloud
+	1. solr提供的的分布式搜索方案。基于zookeeper
+	2. 搭建solr集群
+3. 全局处理异常

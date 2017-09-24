@@ -63,3 +63,6 @@ oracle分页（rownum）和mysql分页（limit）的区别
 	3. select * from table LIMIT 0,5; #返回前5行
 where和having的区别
 
+## 调优
+表锁、行锁、页锁
+
