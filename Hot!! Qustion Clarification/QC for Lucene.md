@@ -38,6 +38,7 @@ solr是一个程序，全文检索服务器。它是基于Lucene写好的程序�
 				3. 提取过后的结果叫做term。term包括两部分，文档的域名和词的内容
 			4. 创建索引(在term上建立索引)
 				1. 倒排索引结构，实现通过词汇找文档。
+					1. 一个关键词对应一个文档的链表（文档id）
 				2. 传统的方法是顺序扫描方法，通过文档找词汇。数据量大、搜索慢。
 	2. 搜索流程/查询索引
 		1. 用户查询接口
@@ -75,6 +76,26 @@ solr是一个程序，全文检索服务器。它是基于Lucene写好的程序�
 		4. ansj_seg：最新版本在 https://github.com/NLPchina/ansj_seg tags仅有1.1版本，从2012年到2014年更新了大小6次，但是作者本人在2014年10月10日说明：“可能我以后没有精力来维护ansj_seg了”，现在由”nlp_china”管理。2014年11月有更新。并未说明是否支持Lucene，是一个由CRF（条件随机场）算法所做的分词算法。
 		5. imdict-chinese-analyzer：最新版在 https://code.google.com/p/imdict-chinese-analyzer/ ， 最新更新也在2009年5月，下载源码，不支持Lucene 4.10 。是利用HMM（隐马尔科夫链）算法。
 		6. Jcseg：最新版本在git.oschina.net/lionsoul/jcseg，支持Lucene 4.10，作者有较高的活跃度。利用mmseg算法。
+
+## lucene和solr的区别
+lucene(jar包)：在web程序中使用其api来维护、优化、管理索引库;solr(war包):solr直接维护索引库我们不用管，web程序调用solr来完成检索。【好处：解耦】
+
+## 分词
+1. ik
+2. 配置方法
+	1. 导入jar包到tomcat下
+	2. 导入配置文件IKAnalyzer.cfg.xml，扩展词词典，停用词词典到tomcat的web-inf/classes下
+	3. 配置schema.xml（solrcore的conf目录下）
+
+	```
+	<!-- IKAnalyzer-->
+    <fieldType name="text_ik" class="solr.TextField">
+      <analyzer class="org.wltea.analyzer.lucene.IKAnalyzer"/>
+    </fieldType>
+	<!--IKAnalyzer Field-->
+	<field name="title_ik" type="text_ik" indexed="true" stored="true" />
+	<field name="content_ik" type="text_ik" indexed="true" stored="false" multiValued="true"/>
+	```
 
 
 
