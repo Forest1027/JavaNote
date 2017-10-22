@@ -1,6 +1,6 @@
 # Maven
 ## Maven概述
-Maven 是apache 下的开源项目，项目管理工具，管理java 项目。
+Maven 是apache 下的开源项目，项目管理工具，管理java 项目，。
 
 1. 项目对象模型(Project Object Model)
 POM 对象模型，每个maven 工程中都有一个pom.xml 文件，定义工程所依赖的jar 包、本工程的坐标、打包运行方式。
