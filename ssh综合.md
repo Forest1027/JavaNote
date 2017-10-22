@@ -1,7 +1,7 @@
-##ssh综合练习（本项目可见ssh-practice的仓库）
-###jar包导入
-###包的建立
-###注解环境搭建
+## ssh综合练习（本项目可见ssh-practice的仓库）
+### jar包导入
+### 包的建立
+### 注解环境搭建
 struts2的bug，在action上面@Controller没用，因为在spring去创建action的时候，beanname是由struts传过去的，不管有没有controller（有没有将action纳入spring的管理），spring都能根据beanname这个类名去运用反射创建action
 
 注意：
@@ -88,7 +88,7 @@ spring整合struts和hibernate，在applicationContext.xml中的三点配置
 
 开发中，图片不会放在tomcat中，会放在磁盘上某处，并配置一个虚拟路径。不然每次重启tomat图片就不见了。
 
-###添加用户
+### 添加用户
 
 前端页面表单提交的地方。注意cusName，cusPhone等是name，而不是id。如果是id，无法在表单提交的时候传给后台。如果使用的name，那么会存为属性值，可以被后台获取到。
 
@@ -113,7 +113,7 @@ spring整合struts和hibernate，在applicationContext.xml中的三点配置
 		<button type="submit" class="btn btn-default">Submit</button>
 	</form>
 
-###删除用户
+### 删除用户
 	//删除客户
 	function delCustomer(customerId) {
 		location.href="${pageContext.request.contextPath}/customer/delCustomer?id="+customerId;
@@ -129,7 +129,7 @@ spring整合struts和hibernate，在applicationContext.xml中的三点配置
 
 如果要是该方法成立，则必须在customerAction中定义deleteOrder方法，并且定义orderId属性用于接收数据。不然，这里的location.href访问的还是CustomerAction，而不是OrderAction
 
-###查询与删除订单（包含分页）
+### 查询与删除订单（包含分页）
 jsp页面的代码如下：
 
 	//分页相关变量
